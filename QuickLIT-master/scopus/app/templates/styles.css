@@ -1,0 +1,640 @@
+body {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  color: #e2e8f0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  padding: 20px;
+  margin: 0 auto;
+}
+
+.card {
+  border-radius: 15px;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-header {
+  border-bottom: none;
+  padding: 25px;
+  background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+}
+
+.card-header h1 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  color: white;
+}
+
+.card-header p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+}
+
+.card-body {
+  padding: 35px;
+}
+
+.card-footer {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.team-info {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin-top: 1rem;
+}
+
+.team-title {
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.team-members {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.team-member {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  min-width: 250px;
+}
+
+.team-member:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15);
+}
+
+.team-member i {
+  font-size: 2.5rem;
+  color: #4f46e5;
+  margin-bottom: 1rem;
+}
+
+.team-member h4 {
+  color: #1e293b;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+
+.email-link {
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.email-link:hover {
+  color: #4f46e5;
+}
+
+.team-university {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.team-department {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+  border-color: #4338ca;
+}
+
+.btn-outline-primary {
+  color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.btn-outline-primary:hover {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.btn-outline-primary.active {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.input-group {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.input-group .btn {
+  border-radius: 0 10px 10px 0 !important;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background-color: #e5e7eb;
+}
+
+.progress-bar {
+  background-color: #4f46e5;
+}
+
+.modal-content {
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-title {
+  color: #fff;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+/* Animasyonlar */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(79, 70, 229, 0.5);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .card {
+    margin: 0;
+  }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn-group .btn {
+    border-radius: 8px !important;
+    margin: 2px 0;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .card-header h1 {
+    font-size: 1.8rem;
+  }
+
+  textarea {
+    min-height: 200px;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .team-members {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .team-member {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+  }
+}
+
+.summary-options {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-group .btn {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 8px !important;
+  transition: all 0.3s ease;
+}
+
+.btn-check:checked + .btn-outline-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  color: white;
+  border-color: #0d6efd;
+  box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+}
+
+.btn-check:checked + .btn-outline-primary:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.upload-area {
+  border: 2px dashed rgba(79, 70, 229, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-area:hover {
+  border-color: #4f46e5;
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.upload-icon {
+  color: #4f46e5;
+  animation: float 3s ease-in-out infinite;
+}
+
+.upload-label {
+  font-size: 1.1rem;
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+  transform: translateY(-2px);
+}
+
+.upload-hint {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15);
+}
+
+.input-focus-effect:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.summary-length-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.length-btn {
+  flex: 1;
+  min-width: 100px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.length-btn.active {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+}
+
+.length-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+}
+
+@media (max-width: 768px) {
+  .summary-length-buttons {
+    flex-direction: column;
+  }
+
+  .length-btn {
+    width: 100%;
+  }
+}
+
+.detail-btn {
+  transition: all 0.3s ease;
+  margin: 0 5px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.detail-btn.active {
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.detail-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Buton renkleri */
+.btn-outline-primary:hover,
+.btn-outline-primary.active {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+  border-color: #4338ca;
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 15px;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+textarea.form-control {
+  resize: none;
+}
+
+.text-primary {
+  color: #4f46e5 !important;
+}
+
+.bg-light {
+  background-color: #f8fafc !important;
+}
+
+.footer {
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Header stili */
+.header {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 15px 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.header-scrolled {
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form elementleri */
+.form-control {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+/* PDF yükleme alanı */
+.pdf-upload {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.pdf-upload:hover {
+  border-color: #007bff;
+}
+
+/* İlerleme çubuğu */
+.progress {
+  height: 20px;
+  margin: 10px 0;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  overflow: hidden;
+  display: none;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #007bff;
+  width: 0;
+  transition: width 0.3s ease;
+}
+
+/* Metin alanları */
+.text-area {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  margin: 20px 0;
+}
+
+/* Özetleme seviyeleri */
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.btn-group .btn {
+  flex: 1;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-group .btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Responsive tasarım */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .text-area {
+    padding: 15px;
+  }
+}

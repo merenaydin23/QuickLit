@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuickLIT - PDF Özetleme Aracı</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      rel="stylesheet"
+    />
+    <link href="styles.css" rel="stylesheet" />
+
+    <!-- PDF.js kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      // PDF.js worker yapılandırması
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    </script>
+    <style>
+      :root {
+        --primary-color: #ff6b6b;
+        --secondary-color: #4ecdc4;
+        --accent-color: #ffe66d;
+        --background-color: #f8f9fa;
+      }
+
+      body {
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #ffe66d);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        min-height: 100vh;
+      }
+
+      @keyframes gradientBG {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn {
+        border-radius: 12px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+      }
+
+      .btn-outline-primary {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .form-control {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.3rem rgba(255, 107, 107, 0.25);
+        transform: translateY(-2px);
+      }
+
+      .team-member {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .team-member::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        opacity: 0;
+        transition: all 0.4s ease;
+        z-index: 0;
+      }
+
+      .team-member:hover::before {
+        opacity: 0.1;
+      }
+
+      .team-member:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        border-color: var(--primary-color);
+      }
+
+      .social-links a {
+        font-size: 1.4rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0.8;
+        margin: 0 10px;
+      }
+
+      .social-links a:hover {
+        opacity: 1;
+        transform: scale(1.3) rotate(5deg);
+      }
+
+      .progress {
+        height: 10px;
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color),
+          var(--accent-color)
+        );
+        background-size: 200% 200%;
+        animation: gradient 3s ease infinite;
+      }
+
+      @keyframes gradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .card-header {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border-radius: 20px 20px 0 0 !important;
+        padding: 1.5rem;
+      }
+
+      .btn-group .btn {
+        position: relative;
+        overflow: hidden;
+        margin: 0 5px;
+      }
+
+      .btn-group .btn::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .btn-group .btn:hover::after {
+        width: 300%;
+        height: 300%;
+      }
+
+      .member-image i {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 5rem;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .team-member:hover .member-image i {
+        transform: scale(1.2) rotate(5deg);
+      }
+
+      .upload-area {
+        border: 3px dashed var(--primary-color);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .upload-area:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: scale(1.02);
+        border-color: var(--secondary-color);
+      }
+
+      .upload-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .upload-area:hover .upload-icon {
+        transform: scale(1.2) rotate(5deg);
+      }
+
+      h4,
+      h5 {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+      }
+
+      .text-muted {
+        color: #666 !important;
+      }
+
+      .text-muted a {
+        color: var(--primary-color) !important;
+        transition: all 0.3s ease;
+      }
+
+      .text-muted a:hover {
+        color: var(--secondary-color) !important;
+        text-decoration: none;
+      }
+
+      /* Özel Animasyonlar */
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .animate-float {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      /* Responsive Düzenlemeler */
+      @media (max-width: 768px) {
+        .card {
+          margin: 10px;
+        }
+
+        .team-member {
+          margin-bottom: 20px;
+        }
+
+        .upload-icon {
+          font-size: 3rem;
+        }
+      }
+
+      .profile-image {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--primary-color);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-bottom: 1rem;
+      }
+
+      .team-member:hover .profile-image {
+        transform: scale(1.1) rotate(5deg);
+        border-color: var(--secondary-color);
+      }
+
+      .profile-image-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 1rem;
+      }
+
+      .profile-image-container::after {
+        content: "";
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border-radius: 50%;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        z-index: -1;
+        opacity: 0;
+        transition: all 0.4s ease;
+      }
+
+      .team-member:hover .profile-image-container::after {
+        opacity: 1;
+      }
+
+      .gradient-text {
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #ffe66d);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.5em;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: gradientText 3s ease infinite;
+      }
+
+      @keyframes gradientText {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .email-link {
+        color: var(--primary-color) !important;
+        transition: all 0.3s ease;
+        position: relative;
+        padding: 2px 0;
+      }
+
+      .email-link:hover {
+        color: var(--secondary-color) !important;
+        transform: translateY(-2px);
+      }
+
+      .email-link::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.3s ease;
+      }
+
+      .email-link:hover::after {
+        transform: scaleX(1);
+        transform-origin: left;
+      }
+
+      .title-container {
+        position: relative;
+        padding: 20px 0;
+      }
+
+      .main-title {
+        font-size: 3.5em;
+        font-weight: 900;
+        letter-spacing: 3px;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #ffe66d);
+        background-size: 200% 200%;
+        animation: gradientText 3s ease infinite;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle-container {
+        position: relative;
+        margin-top: 10px;
+      }
+
+      .subtitle-text {
+        font-size: 1.2em;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        position: relative;
+        z-index: 1;
+      }
+
+      .subtitle-decoration {
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 3px;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        border-radius: 3px;
+      }
+
+      .pulse-icon {
+        color: #ffe66d;
+        animation: pulse 2s infinite;
+        font-size: 1.2em;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes gradientText {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .lightning-container {
+        position: relative;
+        display: inline-block;
+        margin-right: 20px;
+        vertical-align: middle;
+        padding: 10px;
+      }
+
+      .lightning-icon {
+        font-size: 2.8em;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: lightning 2s infinite;
+        text-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.6));
+        position: relative;
+      }
+
+      @keyframes lightning {
+        0% {
+          transform: scale(1) rotate(0deg);
+          filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.6));
+        }
+        25% {
+          transform: scale(1.3) rotate(-8deg);
+          filter: drop-shadow(0 0 12px rgba(78, 205, 196, 0.8));
+        }
+        50% {
+          transform: scale(1) rotate(0deg);
+          filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.6));
+        }
+        75% {
+          transform: scale(1.3) rotate(8deg);
+          filter: drop-shadow(0 0 12px rgba(78, 205, 196, 0.8));
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.6));
+        }
+      }
+
+      .lightning-icon::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 107, 107, 0.2) 0%,
+          rgba(78, 205, 196, 0.2) 50%,
+          rgba(0, 0, 0, 0) 70%
+        );
+        border-radius: 50%;
+        z-index: -1;
+        animation: pulse-glow 2s infinite;
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
+        50% {
+          transform: scale(1.5);
+          opacity: 0.8;
+        }
+      }
+
+      .lightning-container::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          rgba(255, 107, 107, 0.1),
+          rgba(78, 205, 196, 0.1)
+        );
+        border-radius: 50%;
+        z-index: -1;
+        animation: rotate-glow 4s linear infinite;
+      }
+
+      @keyframes rotate-glow {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 1rem 2rem;
+        transition: all 0.3s ease;
+        background: transparent;
+      }
+
+      .header-scrolled {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-scrolled .nav-link {
+        color: var(--text-primary);
+      }
+
+      .header-scrolled .logo {
+        color: var(--primary-color);
+      }
+
+      .nav-link {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .nav-link:hover {
+        opacity: 0.8;
+      }
+
+      /* Geri Butonu Stilleri */
+      .back-button {
+        position: fixed;
+        top: 2rem;
+        left: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 2rem;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        z-index: 1000;
+      }
+
+      .back-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        background: white;
+      }
+
+      .back-button i {
+        font-size: 1.1rem;
+      }
+
+      /* Mobil Responsive */
+      @media (max-width: 768px) {
+        .back-button {
+          top: 1rem;
+          left: 1rem;
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+        }
+
+        .back-button span {
+          display: none;
+        }
+
+        .back-button i {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orb-container">
+      <div class="orb"></div>
+    </div>
+
+    <!-- Geri Butonu -->
+    <a href="/" class="back-button">
+      <i class="fas fa-arrow-left"></i>
+      <span>Anasayfa</span>
+    </a>
+
+    <div class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card">
+            <div class="card-body p-4">
+              <h4 class="text-center mb-4 text-white">
+                <div class="title-container">
+                  <div class="lightning-container">
+                    <i class="fas fa-bolt lightning-icon"></i>
+                  </div>
+                  <span class="gradient-text main-title">QuickLIT</span>
+                  <div class="subtitle-container">
+                    <span class="subtitle-text"
+                      >PDF Dönüştürücü ve Özetleyici</span
+                    >
+                    <div class="subtitle-decoration"></div>
+                  </div>
+                </div>
+              </h4>
+
+              <!-- PDF Yükleme Alanı -->
+              <div class="upload-area mb-4">
+                <i class="fas fa-file-pdf upload-icon"></i>
+                <h4>PDF Dosyası Yükle</h4>
+                <p class="text-muted">PDF dosyanızı sürükleyin veya seçin</p>
+                <input
+                  type="file"
+                  id="pdfFile"
+                  accept=".pdf"
+                  class="d-none"
+                  onchange="convertPDF()"
+                />
+                <button
+                  class="btn btn-primary"
+                  onclick="document.getElementById('pdfFile').click()"
+                >
+                  <i class="fas fa-upload me-2"></i>PDF Seç
+                </button>
+              </div>
+
+              <!-- İlerleme Çubuğu -->
+              <div class="progress mb-4" style="display: none">
+                <div
+                  class="progress-bar progress-bar-striped"
+                  role="progressbar"
+                  style="width: 0%"
+                ></div>
+              </div>
+
+              <!-- Metin Alanı (Gizli) -->
+              <div class="form-group mb-4" style="display: none">
+                <label for="inputText" class="form-label">Metin</label>
+                <textarea
+                  id="inputText"
+                  class="form-control"
+                  rows="8"
+                  placeholder="PDF'den çıkarılan metin burada görünecek..."
+                ></textarea>
+              </div>
+
+              <!-- Özetleme Seçenekleri -->
+              <div
+                class="btn-group d-flex justify-content-center mb-4"
+                role="group"
+              >
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  data-level="long"
+                >
+                  Ayrıntılı
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary active"
+                  data-level="medium"
+                >
+                  Orta
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  data-level="short"
+                >
+                  Yüzeysel
+                </button>
+              </div>
+
+              <!-- Anahtar Kelime Alanı -->
+              <div class="form-group mb-4">
+                <label for="keywordInput" class="form-label"
+                  >Anahtar Kelime (İsteğe bağlı)</label
+                >
+                <input
+                  type="text"
+                  id="keywordInput"
+                  class="form-control"
+                  placeholder="Özetlemede odaklanılacak anahtar kelime..."
+                />
+              </div>
+
+              <!-- Butonlar -->
+              <div class="d-flex gap-2 mb-4">
+                <button
+                  class="btn btn-primary flex-grow-1"
+                  onclick="summarizeText()"
+                >
+                  <i class="fas fa-magic me-2"></i>Özetle
+                </button>
+                <button
+                  class="btn btn-outline-primary"
+                  onclick="summarizeByKeyword()"
+                >
+                  <i class="fas fa-search me-2"></i>Kelimeye Göre Özetle
+                </button>
+                <button
+                  class="btn btn-outline-secondary"
+                  onclick="clearInput()"
+                >
+                  <i class="fas fa-trash me-2"></i>Temizle
+                </button>
+              </div>
+
+              <!-- Çıktı Alanı -->
+              <div class="form-group">
+                <label for="outputText" class="form-label">Özet</label>
+                <div class="position-relative">
+                  <textarea
+                    id="outputText"
+                    class="form-control"
+                    rows="8"
+                    readonly
+                    placeholder="Özet burada görünecek..."
+                  ></textarea>
+                  <button
+                    class="btn btn-sm btn-outline-primary position-absolute top-0 end-0 m-2"
+                    onclick="copyOutput()"
+                  >
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ekip Bilgileri -->
+    <div class="container mt-5 mb-5">
+      <div class="card border-0 shadow-lg animate__animated animate__fadeIn">
+        <div class="card-header bg-gradient text-white py-4">
+          <h4 class="mb-0 text-center">
+            <i class="fas fa-users me-2"></i>
+            Proje Ekibi
+          </h4>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="team-member text-center p-4 rounded-3">
+                <div class="profile-image-container">
+                  <img
+                    src="https://avatars.githubusercontent.com/u/142590108?v=4"
+                    alt="İlayda Şenocak"
+                    class="profile-image"
+                    onerror="this.src='https://ui-avatars.com/api/?name=İlayda+Şenocak&background=FF6B6B&color=fff&size=150'"
+                  />
+                </div>
+                <h5 class="mb-2 fw-bold">İlayda Şenocak</h5>
+                <p class="text-muted mb-2">
+                  <i class="fas fa-envelope me-2"></i>
+                  <a
+                    href="mailto:230541004@firat.edu.tr"
+                    class="text-decoration-none email-link"
+                    >230541004@firat.edu.tr</a
+                  >
+                </p>
+                <div class="social-links mt-3">
+                  <a
+                    href="https://github.com/ilydasnck"
+                    class="text-primary me-2"
+                    target="_blank"
+                    ><i class="fab fa-github"></i
+                  ></a>
+                  <a
+                    href="https://www.linkedin.com/in/ilayda-senocak/"
+                    class="text-primary me-2"
+                    target="_blank"
+                    ><i class="fab fa-linkedin"></i
+                  ></a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="team-member text-center p-4 rounded-3">
+                <div class="profile-image-container">
+                  <img
+                    src="https://avatars.githubusercontent.com/u/147327203?v=4"
+                    alt="Muhammed Eren Aydın"
+                    class="profile-image"
+                    onerror="this.src='https://ui-avatars.com/api/?name=Muhammed+Eren+Aydın&background=4ECDC4&color=fff&size=150'"
+                  />
+                </div>
+                <h5 class="mb-2 fw-bold">Muhammed Eren Aydın</h5>
+                <p class="text-muted mb-2">
+                  <i class="fas fa-envelope me-2"></i>
+                  <a
+                    href="mailto:230541034@firat.edu.tr"
+                    class="text-decoration-none email-link"
+                    >230541034@firat.edu.tr</a
+                  >
+                </p>
+                <div class="social-links mt-3">
+                  <a
+                    href="https://github.com/merenaydin23"
+                    class="text-primary me-2"
+                    target="_blank"
+                    ><i class="fab fa-github"></i
+                  ></a>
+                  <a
+                    href="https://www.linkedin.com/in/muhammederen23/"
+                    class="text-primary me-2"
+                    target="_blank"
+                    ><i class="fab fa-linkedin"></i
+                  ></a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="team-member text-center p-4 rounded-3">
+                <div class="profile-image-container">
+                  <img
+                    src="https://avatars.githubusercontent.com/u/147273874?v=4"
+                    alt="Esma Sarıtop"
+                    class="profile-image"
+                    onerror="this.src='https://ui-avatars.com/api/?name=Esma+Saritop&background=FFE66D&color=fff&size=150'"
+                  />
+                </div>
+                <h5 class="mb-2 fw-bold">Esma Sarıtop</h5>
+                <p class="text-muted mb-2">
+                  <i class="fas fa-envelope me-2"></i>
+                  <a
+                    href="mailto:230541100@firat.edu.tr"
+                    class="text-decoration-none email-link"
+                    >230541100@firat.edu.tr</a
+                  >
+                </p>
+                <div class="social-links mt-3">
+                  <a
+                    href="https://github.com/esmasaritop"
+                    class="text-primary me-2"
+                    target="_blank"
+                    ><i class="fab fa-github"></i
+                  ></a>
+                  <a
+                    href="https://www.linkedin.com/in/esmasaritop/"
+                    class="text-primary me-2"
+                    target="_blank"
+                    ><i class="fab fa-linkedin"></i
+                  ></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap ve diğer scriptler -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // PDF'den metne dönüştürme fonksiyonu
+      async function convertPDF() {
+        const fileInput = document.getElementById("pdfFile");
+        const file = fileInput.files[0];
+        const progressBar = document.querySelector(".progress");
+        const progressBarInner = progressBar.querySelector(".progress-bar");
+        const inputText = document.getElementById("inputText");
+
+        if (!file || file.type !== "application/pdf") {
+          alert("Lütfen geçerli bir PDF dosyası seçin.");
+          return;
+        }
+
+        try {
+          progressBar.style.display = "block";
+          progressBarInner.style.width = "30%";
+
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+          let fullText = "";
+          progressBarInner.style.width = "60%";
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item) => item.str)
+              .join(" ");
+            fullText += pageText + "\n\n";
+          }
+
+          progressBarInner.style.width = "100%";
+          setTimeout(() => {
+            progressBar.style.display = "none";
+            progressBarInner.style.width = "0%";
+          }, 1000);
+
+          inputText.value = fullText;
+          // Otomatik özetleme kaldırıldı
+        } catch (error) {
+          console.error("PDF dönüştürme hatası:", error);
+          alert("PDF dönüştürülürken bir hata oluştu.");
+          progressBar.style.display = "none";
+        }
+      }
+
+      // Özet oluşturma fonksiyonu
+      async function summarizeText() {
+        const inputText = document.getElementById("inputText").value;
+        const outputText = document.getElementById("outputText");
+        const activeButton = document.querySelector(".btn-group .active");
+        const selectedLevel = activeButton
+          ? activeButton.dataset.level
+          : "medium";
+
+        if (!inputText.trim()) {
+          alert("Lütfen özetlenecek bir metin girin veya PDF yükleyin.");
+          return;
+        }
+
+        try {
+          outputText.value = "Özet oluşturuluyor...";
+
+          const response = await fetch("/summarize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: inputText,
+              length: selectedLevel,
+              format: "paragraph",
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(
+              error.error || "Özet oluşturulurken bir hata oluştu"
+            );
+          }
+
+          const data = await response.json();
+          outputText.value = data.summary;
+        } catch (error) {
+          console.error("Özet oluşturma hatası:", error);
+          alert(error.message);
+          outputText.value = "";
+        }
+      }
+
+      // Anahtar kelimeye göre özet oluşturma
+      async function summarizeByKeyword() {
+        const inputText = document.getElementById("inputText").value;
+        const keyword = document.getElementById("keywordInput").value;
+        const outputText = document.getElementById("outputText");
+
+        if (!inputText.trim()) {
+          alert("Lütfen özetlenecek bir metin girin.");
+          return;
+        }
+
+        if (!keyword.trim()) {
+          alert("Lütfen bir anahtar kelime girin.");
+          return;
+        }
+
+        try {
+          outputText.value = "Anahtar kelimeye göre özet oluşturuluyor...";
+
+          const response = await fetch("/summarize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: inputText,
+              prompt: `Bu metni "${keyword}" anahtar kelimesine odaklanarak özetle.`,
+              length: "medium",
+              format: "paragraph",
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(
+              error.error || "Özet oluşturulurken bir hata oluştu"
+            );
+          }
+
+          const data = await response.json();
+          outputText.value = data.summary;
+        } catch (error) {
+          console.error("Özet oluşturma hatası:", error);
+          alert(error.message);
+          outputText.value = "";
+        }
+      }
+
+      // Metni temizleme fonksiyonu
+      function clearInput() {
+        document.getElementById("inputText").value = "";
+        document.getElementById("outputText").value = "";
+        document.getElementById("keywordInput").value = "";
+        document.getElementById("pdfFile").value = "";
+      }
+
+      // Özeti kopyalama fonksiyonu
+      function copyOutput() {
+        const outputText = document.getElementById("outputText");
+        outputText.select();
+        document.execCommand("copy");
+
+        const button = document.querySelector(
+          ".btn-outline-primary.position-absolute"
+        );
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+          button.innerHTML = originalText;
+        }, 2000);
+      }
+
+      // Header scroll efekti
+      window.addEventListener("scroll", function () {
+        const header = document.querySelector(".header");
+        if (window.scrollY > 50) {
+          header.classList.add("header-scrolled");
+        } else {
+          header.classList.remove("header-scrolled");
+        }
+      });
+
+      // Özetleme seviyesi butonları için event listener'lar
+      document.addEventListener("DOMContentLoaded", function () {
+        const buttons = document.querySelectorAll(".btn-group .btn");
+        buttons.forEach((button) => {
+          button.addEventListener("click", function () {
+            buttons.forEach((btn) => btn.classList.remove("active"));
+            this.classList.add("active");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QuickLIT - Akademik Makale Arama</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Firebase SDK'ları -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+      /* Header stilleri */
+      .header {
+        background: transparent;
+        padding: 1rem 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      .header.scrolled {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        text-decoration: none;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+      }
+
+      .header.scrolled .logo {
+        color: var(--primary-color);
+      }
+
+      .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+      }
+
+      .nav-link {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+      }
+
+      .header.scrolled .nav-link {
+        color: #333;
+      }
+
+      .nav-link:hover {
+        color: white;
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .header.scrolled .nav-link:hover {
+        color: var(--primary-color);
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .auth-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-left: 2rem;
+        transition: all 0.3s ease;
+      }
+
+      .auth-button {
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+      }
+
+      #loginBtn {
+        background: transparent;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      .header.scrolled #loginBtn {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      #loginBtn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .header.scrolled #loginBtn:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      #registerBtn {
+        background: white;
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+      }
+
+      .header.scrolled #registerBtn {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      #registerBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      #profileLink {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .header.scrolled #profileLink {
+        background: rgba(0, 102, 204, 0.1);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      #profileLink:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .header.scrolled #profileLink:hover {
+        background: rgba(0, 102, 204, 0.2);
+      }
+
+      #logoutBtn {
+        background: transparent;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .header.scrolled #logoutBtn {
+        color: #333;
+        border-color: rgba(0, 0, 0, 0.2);
+      }
+
+      #logoutBtn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .header.scrolled #logoutBtn:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      /* Responsive tasarım */
+      @media (max-width: 768px) {
+        .header-content {
+          padding: 0 1rem;
+        }
+
+        .nav-menu {
+          gap: 1rem;
+        }
+
+        .nav-link {
+          display: none;
+        }
+
+        .auth-buttons {
+          margin-left: 0;
+          position: relative;
+          z-index: 1001;
+        }
+      }
+
+      /* Ana içerik için padding ekle */
+      .main-content {
+        padding-top: 5rem;
+      }
+
+      /* Makaleye Git butonu için stil */
+      .scopus-button {
+        background-color: #0066cc !important;
+        color: white !important;
+      }
+      .scopus-button:hover {
+        background-color: #0055aa !important;
+      }
+
+      /* Yer işareti için stiller */
+      .bookmark-icon {
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: #ccc;
+        transition: all 0.2s ease;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        z-index: 2;
+        filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.2));
+      }
+
+      .bookmark-icon:hover {
+        color: #0066cc;
+        transform: scale(1.2);
+      }
+
+      .bookmark-icon.bookmarked {
+        color: #ff9900;
+        filter: drop-shadow(0 0 3px rgba(255, 153, 0, 0.4));
+      }
+
+      /* Bookmark edilmiş makalelerin görünümü */
+      .result-item.bookmarked {
+        border-left: 4px solid #ff9900;
+        background-color: rgba(255, 248, 235, 0.7);
+      }
+
+      /* Auth modal için stiller */
+      .auth-container {
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+      }
+
+      .auth-tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .auth-tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        opacity: 0.7;
+      }
+
+      .auth-tab.active {
+        opacity: 1;
+        border-bottom: 2px solid #0066cc;
+      }
+
+      .auth-form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .form-group label {
+        font-size: 14px;
+        color: #555;
+      }
+
+      .form-group input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .auth-button {
+        padding: 10px;
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .auth-button:hover {
+        background-color: #0055aa;
+      }
+
+      .auth-error {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      /* Sayfalama butonları için stiller */
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+
+      .pagination-button {
+        padding: 0.5rem 1rem;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.3s ease;
+      }
+
+      .pagination-button:hover {
+        background-color: #e0e0e0;
+      }
+
+      .pagination-button.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .pagination-info {
+        display: flex;
+        align-items: center;
+        color: #666;
+      }
+
+      /* PDF Modal Stilleri */
+      #pdfModal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+      }
+
+      .pdf-modal-content {
+        width: 90%;
+        max-width: 450px;
+        padding: 30px;
+        text-align: center;
+        background-color: #fff;
+        margin: 10% auto;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+
+      .pdf-status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .pdf-status h2 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #0066cc;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .pdf-status p {
+        font-size: 18px;
+        margin-bottom: 20px;
+        font-weight: 500;
+      }
+
+      .pdf-status.success p {
+        color: #4caf50;
+      }
+
+      .pdf-status.error p {
+        color: #f44336;
+      }
+
+      .modal-button {
+        padding: 10px 20px;
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .modal-button:hover {
+        background-color: #0055aa;
+      }
+
+      /* Başarı Modalı Stilleri */
+      .success-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+
+      .success-modal-content {
+        background: linear-gradient(135deg, #0066cc, #004d99);
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease-out;
+      }
+
+      .success-modal-content i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #fff;
+      }
+
+      .success-modal-content h2 {
+        margin: 0 0 10px 0;
+        font-size: 24px;
+      }
+
+      .success-modal-content p {
+        margin: 0;
+        font-size: 16px;
+        opacity: 0.9;
+      }
+
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Mobil menü stilleri */
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+        z-index: 1002;
+      }
+
+      .header.scrolled .mobile-menu-btn {
+        color: #333;
+      }
+
+      /* Mobil responsive tasarım */
+      @media (max-width: 768px) {
+        .mobile-menu-btn {
+          display: block;
+        }
+
+        .nav-menu {
+          position: fixed;
+          top: 0;
+          right: -100%;
+          height: 100vh;
+          width: 80%;
+          max-width: 300px;
+          background: white;
+          flex-direction: column;
+          padding: 4rem 2rem 2rem;
+          gap: 1rem;
+          transition: all 0.3s ease;
+          box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+          z-index: 1001;
+        }
+
+        .nav-menu.active {
+          right: 0;
+        }
+
+        .nav-menu .close-btn {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          color: #333;
+          cursor: pointer;
+          padding: 0.5rem;
+        }
+
+        .nav-menu .menu-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          padding: 1rem 0;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-menu .menu-section:last-child {
+          border-bottom: none;
+        }
+
+        .nav-link {
+          display: block;
+          color: #333 !important;
+          width: 100%;
+          text-align: left;
+          padding: 1rem;
+          border-radius: 0.5rem;
+          font-size: 1.1rem;
+          font-weight: 500;
+        }
+
+        .nav-menu .menu-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          padding: 1.5rem 0;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-button {
+          width: 100%;
+          padding: 1rem;
+          font-size: 1.1rem;
+          font-weight: 500;
+          text-align: center;
+          background: var(--primary-color);
+          color: white;
+          border: none;
+          border-radius: 0.5rem;
+          transition: all 0.3s ease;
+        }
+
+        .auth-button:hover {
+          background: var(--secondary-color);
+          transform: translateY(-2px);
+        }
+
+        #loginBtn {
+          background: transparent;
+          border: 2px solid var(--primary-color);
+          color: var(--primary-color);
+        }
+
+        #loginBtn:hover {
+          background: rgba(0, 0, 0, 0.05);
+        }
+      }
+
+      /* Menu Overlay */
+      .menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .menu-overlay.active {
+        display: block;
+        opacity: 1;
+      }
+
+      /* CSS için Toast stili */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: white;
+        color: #333;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .toast.success i {
+        color: #4caf50;
+      }
+
+      .toast.error i {
+        color: #f44336;
+      }
+
+      .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .toast i {
+        font-size: 18px;
+      }
+
+      /* Alıntı Modal Stilleri */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+      }
+
+      .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        position: relative;
+        width: 80%;
+        max-width: 600px;
+        animation: modalFadeIn 0.3s ease-out;
+        text-align: center;
+      }
+
+      .close {
+        position: absolute;
+        right: 15px;
+        top: 10px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #999;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+
+      .close:hover {
+        color: #333;
+      }
+
+      .citation-text {
+        margin: 20px 0;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        border-left: 4px solid #0066cc;
+        text-align: left;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      .copy-button {
+        padding: 10px 25px;
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .copy-button:hover {
+        background-color: #0055aa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .copy-button.copied {
+        background-color: #4caf50;
+      }
+
+      .copy-button i {
+        font-size: 14px;
+      }
+
+      /* Format Sekmeleri Stilleri */
+      .additional-formats {
+        margin: 15px 0;
+      }
+
+      .format-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .format-tab {
+        padding: 6px 15px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        background-color: #f5f5f5;
+        color: #555;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .format-tab:hover {
+        background-color: #eee;
+        color: #333;
+      }
+
+      .format-tab.active {
+        background-color: #0066cc;
+        color: white;
+        border-color: #0066cc;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Animasyonlu Arka Plan -->
+    <div class="orb-container">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Hareketli Parçacıklar -->
+    <div class="particles-container">
+      <div class="particle particle-1"></div>
+      <div class="particle particle-2"></div>
+      <div class="particle particle-3"></div>
+      <div class="particle particle-4"></div>
+      <div class="particle particle-5"></div>
+      <div class="particle particle-6"></div>
+      <div class="particle particle-7"></div>
+      <div class="particle particle-8"></div>
+    </div>
+
+    <!-- Genel Işıltılı Efekt -->
+    <div class="glow-effect"></div>
+
+    <header class="header">
+      <div class="header-content">
+        <a href="/" class="logo">QuickLIT</a>
+        <button class="mobile-menu-btn" aria-label="Menüyü aç">
+          <i class="fas fa-bars"></i>
+        </button>
+        <nav class="nav-menu">
+          <div class="menu-section">
+            <a href="/" class="nav-link interactive-element">Anasayfa</a>
+            <a href="/discover" class="nav-link interactive-element">Keşfet</a>
+            <a href="/summarize" class="nav-link interactive-element">Özetle</a>
+          </div>
+          <div class="menu-section auth-section">
+            <div class="auth-buttons">
+              <button id="loginBtn" class="auth-button">Giriş Yap</button>
+              <button id="registerBtn" class="auth-button">Kaydol</button>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-content animate-in">
+      <div class="search-container">
+        <div class="logo-container">
+          <img
+            src="{{ url_for('static', filename='images/logo.png') }}"
+            alt="QuickLIT Logo"
+            class="main-logo"
+          />
+        </div>
+        <form method="POST" class="search-form">
+          <div class="search-wrapper">
+            <div class="category-select">
+              <select name="category">
+                <option value="all">Tüm Maddeler</option>
+                <option value="articles">Makaleler</option>
+                <option value="journals">Dergiler</option>
+                <option value="authors">Yazarlar</option>
+              </select>
+            </div>
+            <div class="search-input-wrapper">
+              <input
+                type="text"
+                name="query"
+                placeholder="Ne Öğrenmek İstiyorsunuz?"
+                required
+              />
+              <button type="submit" class="search-button">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Auth Modal -->
+      <div id="authModal" class="modal">
+        <div class="modal-content">
+          <div class="auth-container">
+            <div class="auth-tabs">
+              <button class="auth-tab active" data-tab="login">
+                Giriş Yap
+              </button>
+              <button class="auth-tab" data-tab="register">Kaydol</button>
+              <button class="close-modal">&times;</button>
+            </div>
+            <div class="auth-form-container">
+              <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                  <label for="loginEmail">E-posta</label>
+                  <input type="email" id="loginEmail" required />
+                </div>
+                <div class="form-group">
+                  <label for="loginPassword">Şifre</label>
+                  <input type="password" id="loginPassword" required />
+                </div>
+                <button type="submit" class="auth-button">Giriş Yap</button>
+                <div id="loginError" class="auth-error"></div>
+              </form>
+              <form id="registerForm" class="auth-form" style="display: none">
+                <div class="form-group">
+                  <label for="registerFirstName">Adınız</label>
+                  <input type="text" id="registerFirstName" required />
+                </div>
+                <div class="form-group">
+                  <label for="registerLastName">Soyadınız</label>
+                  <input type="text" id="registerLastName" required />
+                </div>
+                <div class="form-group">
+                  <label for="registerEmail">E-posta</label>
+                  <input type="email" id="registerEmail" required />
+                </div>
+                <div class="form-group">
+                  <label for="registerPassword">Şifre</label>
+                  <input type="password" id="registerPassword" required />
+                </div>
+                <button type="submit" class="auth-button">Kaydol</button>
+                <div id="registerError" class="auth-error"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if results %}
+      <div class="results-grid">
+        {% if results.get('search-results', {}).get('entry') %} {% for entry in
+        results['search-results']['entry'] %} {% set scopus_link = '' %} {% for
+        link in entry.get('link', []) %} {% if link.get('@ref') == 'scopus' %}
+        {% set scopus_link = link.get('@href', '#') %} {% endif %} {% endfor %}
+        {% set articleId = entry.get('dc:identifier', '').split(':')[-1] %}
+        <div
+          class="result-item animate-in"
+          data-article-id="{{ articleId }}"
+          onclick="goToArticle('{{ scopus_link }}')"
+        >
+          <div class="result-header">
+            <h3 class="result-title">
+              {{ entry.get('dc:title', 'Başlık yok') }}
+            </h3>
+            <i
+              class="fas fa-bookmark bookmark-icon"
+              data-article-id="{{ articleId }}"
+            ></i>
+          </div>
+          <p class="result-author">
+            <strong>Yazar:</strong> {{ entry.get('dc:creator', 'Belirtilmemiş')
+            }}
+          </p>
+          <div class="result-actions">
+            <button
+              class="action-button cite-button"
+              data-title="{{ entry.get('dc:title', '') }}"
+              data-author="{{ entry.get('dc:creator', '') }}"
+              data-journal="{{ entry.get('prism:publicationName', '') }}"
+              data-volume="{{ entry.get('prism:volume', '') }}"
+              data-issue="{{ entry.get('prism:issueIdentifier', '') }}"
+              data-pages="{{ entry.get('prism:pageRange', '') }}"
+              data-doi="{{ entry.get('prism:doi', '') }}"
+              onclick="event.stopPropagation(); showCitation(this.dataset.title, this.dataset.author, this.dataset.journal, this.dataset.volume, this.dataset.issue, this.dataset.pages, this.dataset.doi, this)"
+            >
+              <i class="fas fa-quote-right"></i> Alıntı Yap
+            </button>
+
+            <!-- Makaleye Git butonu -->
+            {% set eid = entry.get('eid', '').replace('2-s2.0-', '') %} {% if
+            eid %}
+            <a
+              href="https://www.scopus.com/record/display.uri?eid=2-s2.0-{{ eid }}&origin=resultslist"
+              class="action-button scopus-button"
+              target="_blank"
+              onclick="event.stopPropagation();"
+            >
+              <i class="fas fa-external-link-alt"></i> Makaleye Git
+            </a>
+            {% endif %} {% set scopus_id = entry.get('dc:identifier',
+            '').split(':')[-1] %} {% if scopus_id %}
+            <a
+              href="{{ url_for('download_pdf', scopus_id=scopus_id) }}"
+              class="action-button download-button"
+              onclick="event.stopPropagation();"
+              download
+            >
+              <i class="fas fa-file-pdf"></i> PDF İndir
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <p class="no-results">Sonuç bulunamadı.</p>
+        {% endif %}
+      </div>
+
+      <!-- Sayfalama butonları -->
+      {% if results.get('search-results', {}).get('entry') %}
+      <div class="pagination">
+        {% set total_results = results.get('search-results',
+        {}).get('opensearch:totalResults', 0)|int %} {% if current_page > 1 %}
+        <a
+          href="{{ url_for('home', page=current_page-1, query=query) }}"
+          class="pagination-button"
+        >
+          <i class="fas fa-chevron-left"></i> Önceki
+        </a>
+        {% endif %}
+
+        <div class="pagination-info">
+          Sayfa {{ current_page }} / {{ (total_results /
+          10)|round(method='ceil')|int }}
+        </div>
+
+        {% if total_results > current_page * 10 %}
+        <a
+          href="{{ url_for('home', page=current_page+1, query=query) }}"
+          class="pagination-button"
+        >
+          Sonraki <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %} {% endif %}
+
+      <!-- Alıntı Modal -->
+      <div id="citationModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>APA Format Alıntı</h2>
+          <div class="citation-text">
+            <p id="citationContent"></p>
+          </div>
+          <div class="additional-formats">
+            <div class="format-tabs">
+              <button class="format-tab active" data-format="apa">APA</button>
+              <button class="format-tab" data-format="mla">MLA</button>
+              <button class="format-tab" data-format="chicago">Chicago</button>
+            </div>
+          </div>
+          <button id="copyCitation" class="copy-button">Kopyala</button>
+        </div>
+      </div>
+
+      <!-- PDF İndirme Modal -->
+      <div id="pdfModal" class="modal">
+        <div class="modal-content pdf-modal-content">
+          <div class="pdf-status">
+            <h2>PDF İşlemi</h2>
+            <div class="loading-spinner"></div>
+            <p id="pdfStatusText">PDF İndiriliyor...</p>
+            <button
+              id="pdfModalClose"
+              class="modal-button"
+              style="display: none"
+            >
+              Tamam
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Başarı Modalı -->
+      <div id="successModal" class="success-modal">
+        <div class="success-modal-content">
+          <i class="fas fa-check-circle"></i>
+          <h2>Giriş Başarılı!</h2>
+          <p>Hoş geldiniz!</p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      /**
+       * FAVORI İŞLEMLERİ OPTİMİZASYONLARI (v2)
+       *
+       * 1. Görsel İyileştirmeler:
+       *   - Favori ikonu boyutu ve rengini daha çarpıcı hale getirdik (#ff9900)
+       *   - Favori eklenen makaleler için belirgin kenarlık ve arka plan rengi ekledik
+       *   - Hover efektlerini iyileştirerek kullanıcı deneyimini artırdık
+       *
+       * 2. Performans İyileştirmeleri:
+       *   - Favori durumlarını önbellekte tutarak tekrarlı Firebase sorguları engellendi
+       *   - Anında UI güncellemesi eklenerek kullanıcıya hızlı geri bildirim sağlandı
+       *   - Aynı makale için çakışan işlemleri önlemek için "bekleyen işlemler" sistemi eklendi
+       *   - DOM manipülasyonları optimize edilerek sayfa performansı artırıldı
+       *
+       * 3. Kullanıcı Deneyimi İyileştirmeleri:
+       *   - Başarılı/başarısız işlemler için toast bildirimleri eklendi
+       *   - Hata durumunda UI'ın önceki haline dönmesi sağlandı
+       *   - Favori eklenen makalelerin görsel olarak daha belirgin olması sağlandı
+       */
+
+      // Firebase yapılandırması
+      const firebaseConfig = {
+        apiKey: "AIzaSyBLZfR9qWZWYDCxXqaq6iioZtSDTPURYwY",
+        authDomain: "quicklit-96b6a.firebaseapp.com",
+        projectId: "quicklit-96b6a",
+        storageBucket: "quicklit-96b6a.firebasestorage.app",
+        messagingSenderId: "613186445176",
+        appId: "1:613186445176:web:bda221f909758c19d1728d",
+        measurementId: "G-TZRLG149TQ",
+      };
+
+      // Firebase'i başlat
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // Önbellek nesnesi - favori durumlarını saklamak için
+      const favoriteCache = {
+        items: {},
+        pending: new Set(), // İşlem bekleyen makale ID'leri
+        add: function (articleId) {
+          this.items[articleId] = true;
+        },
+        remove: function (articleId) {
+          this.items[articleId] = false;
+        },
+        isFavorite: function (articleId) {
+          return this.items[articleId] === true;
+        },
+        isPending: function (articleId) {
+          return this.pending.has(articleId);
+        },
+        addPending: function (articleId) {
+          this.pending.add(articleId);
+        },
+        removePending: function (articleId) {
+          this.pending.delete(articleId);
+        },
+      };
+
+      // Toast bildirimi gösterme fonksiyonu
+      function showToast(message, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+          <div class="toast-content">
+            <i class="fas ${
+              type === "success" ? "fa-check-circle" : "fa-exclamation-circle"
+            }"></i>
+            <span>${message}</span>
+          </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Animasyon ile göster
+        setTimeout(() => toast.classList.add("show"), 10);
+
+        // 3 saniye sonra kaldır
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+      }
+
+      // Auth state değişikliğini dinle
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          // Kullanıcı giriş yaptı
+          const authButtons = document.querySelectorAll(".auth-buttons");
+          authButtons.forEach((buttons) => {
+            buttons.innerHTML = `
+              <a href="/profile" class="auth-button" id="profileLink">Profilim</a>
+              <button id="logoutBtn" class="auth-button">Çıkış Yap</button>
+            `;
+          });
+
+          // Profil linkine tıklama işlemini düzenle
+          document.querySelectorAll("#profileLink").forEach((link) => {
+            link.addEventListener("click", async function (e) {
+              e.preventDefault();
+              try {
+                // Firebase kullanıcı token'ını al
+                const idToken = await user.getIdToken(true);
+
+                // Token'ı kullanarak bir form göndererek server-side session oluştur
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = "/firebase_login";
+                form.style.display = "none";
+
+                const tokenInput = document.createElement("input");
+                tokenInput.type = "hidden";
+                tokenInput.name = "idToken";
+                tokenInput.value = idToken;
+
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+              } catch (error) {
+                console.error("Profil sayfasına yönlendirme hatası:", error);
+                alert(
+                  "Profil sayfasına erişilemiyor. Lütfen tekrar giriş yapın."
+                );
+              }
+            });
+          });
+
+          // Çıkış yap butonuna tıklama olayı ekle
+          document.querySelectorAll("#logoutBtn").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              try {
+                // Firebase'den çıkış yap
+                await auth.signOut();
+
+                // Server-side session'ı da temizle
+                fetch("/logout").then((response) => {
+                  // Başarı modalını göster
+                  const successModal = document.getElementById("successModal");
+                  const modalContent = successModal.querySelector(
+                    ".success-modal-content"
+                  );
+                  modalContent.innerHTML = `
+                      <i class="fas fa-sign-out-alt"></i>
+                      <h2>Çıkış Yapıldı!</h2>
+                      <p>Güle güle!</p>
+                    `;
+                  successModal.style.display = "flex";
+
+                  // 2 saniye sonra modalı kapat ve sayfayı yenile
+                  setTimeout(() => {
+                    successModal.style.display = "none";
+                    location.reload();
+                  }, 2000);
+                });
+              } catch (error) {
+                console.error("Çıkış yapma hatası:", error);
+                alert("Çıkış yapılırken bir hata oluştu");
+              }
+            });
+          });
+        } else {
+          // Kullanıcı çıkış yaptı
+          const authButtons = document.querySelectorAll(".auth-buttons");
+          authButtons.forEach((buttons) => {
+            buttons.innerHTML = `
+              <button id="loginBtn" class="auth-button">Giriş Yap</button>
+              <button id="registerBtn" class="auth-button">Kaydol</button>
+            `;
+          });
+
+          // Modal event listener'larını yeniden ekle
+          document.querySelectorAll("#loginBtn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              authModal.style.display = "flex";
+              switchTab("login");
+            });
+          });
+
+          document.querySelectorAll("#registerBtn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              authModal.style.display = "flex";
+              switchTab("register");
+            });
+          });
+        }
+      });
+
+      // Modal işlemleri
+      const authModal = document.getElementById("authModal");
+      const closeModal = document.querySelector(".close-modal");
+      const authTabs = document.querySelectorAll(".auth-tab");
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+
+      // Modal'ı aç
+      document.addEventListener("click", (e) => {
+        if (e.target.id === "loginBtn" || e.target.closest("#loginBtn")) {
+          authModal.style.display = "flex";
+          switchTab("login");
+        } else if (
+          e.target.id === "registerBtn" ||
+          e.target.closest("#registerBtn")
+        ) {
+          authModal.style.display = "flex";
+          switchTab("register");
+        }
+      });
+
+      // Modal'ı kapat
+      closeModal.addEventListener("click", () => {
+        authModal.style.display = "none";
+      });
+
+      // Modal dışına tıklandığında kapat
+      window.addEventListener("click", (e) => {
+        if (e.target === authModal) {
+          authModal.style.display = "none";
+        }
+      });
+
+      // Tab değiştirme
+      function switchTab(tab) {
+        authTabs.forEach((t) => t.classList.remove("active"));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+
+        if (tab === "login") {
+          loginForm.style.display = "flex";
+          registerForm.style.display = "none";
+        } else {
+          loginForm.style.display = "none";
+          registerForm.style.display = "flex";
+        }
+      }
+
+      authTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          switchTab(tab.dataset.tab);
+        });
+      });
+
+      // Giriş formu işlemi
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        try {
+          // Firebase ile giriş yap
+          const userCredential = await auth.signInWithEmailAndPassword(
+            email,
+            password
+          );
+          const user = userCredential.user;
+
+          // Firebase token'ını al ve backend'e gönder
+          const idToken = await user.getIdToken(true);
+
+          // Token'ı kullanarak server-side session oluştur
+          fetch("/firebase_login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `idToken=${encodeURIComponent(idToken)}`,
+          }).then(() => {
+            authModal.style.display = "none";
+
+            // Başarı modalını göster
+            const successModal = document.getElementById("successModal");
+            successModal.style.display = "flex";
+
+            // 2 saniye sonra modalı kapat ve sayfayı yenile
+            setTimeout(() => {
+              successModal.style.display = "none";
+              location.reload();
+            }, 2000);
+          });
+        } catch (error) {
+          document.getElementById("loginError").textContent = getErrorMessage(
+            error.code
+          );
+        }
+      });
+
+      // Kayıt formu işlemi
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const firstName = document.getElementById("registerFirstName").value;
+        const lastName = document.getElementById("registerLastName").value;
+        const email = document.getElementById("registerEmail").value;
+        const password = document.getElementById("registerPassword").value;
+
+        try {
+          // Firebase ile kayıt ol
+          const userCredential = await auth.createUserWithEmailAndPassword(
+            email,
+            password
+          );
+          const user = userCredential.user;
+
+          // Firebase Authentication profilini güncelle
+          await user.updateProfile({
+            displayName: `${firstName} ${lastName}`,
+          });
+
+          // Firestore'da kullanıcı verilerini kaydet
+          await db
+            .collection("users")
+            .doc(user.uid)
+            .set({
+              email: email,
+              firstName: firstName,
+              lastName: lastName,
+              displayName: `${firstName} ${lastName}`,
+              created_at: firebase.firestore.FieldValue.serverTimestamp(),
+              savedArticles: [],
+            });
+
+          // Firebase token'ını al ve backend'e gönder
+          const idToken = await user.getIdToken(true);
+
+          // Token'ı kullanarak server-side session oluştur
+          fetch("/firebase_login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `idToken=${encodeURIComponent(idToken)}`,
+          }).then(() => {
+            authModal.style.display = "none";
+
+            // Başarı modalını göster
+            const successModal = document.getElementById("successModal");
+            const modalContent = successModal.querySelector(
+              ".success-modal-content"
+            );
+            modalContent.innerHTML = `
+              <i class="fas fa-user-plus"></i>
+              <h2>Kayıt Başarılı!</h2>
+              <p>Hoş geldiniz, ${firstName} ${lastName}!</p>
+            `;
+            successModal.style.display = "flex";
+
+            // 2 saniye sonra modalı kapat ve sayfayı yenile
+            setTimeout(() => {
+              successModal.style.display = "none";
+              location.reload();
+            }, 2000);
+          });
+        } catch (error) {
+          document.getElementById("registerError").textContent =
+            getErrorMessage(error.code);
+        }
+      });
+
+      // Hata mesajlarını türkçeleştir
+      function getErrorMessage(errorCode) {
+        switch (errorCode) {
+          case "auth/invalid-email":
+            return "Geçersiz e-posta adresi";
+          case "auth/user-disabled":
+            return "Bu kullanıcı hesabı devre dışı bırakılmış";
+          case "auth/user-not-found":
+            return "Bu e-posta adresine sahip bir kullanıcı bulunamadı";
+          case "auth/wrong-password":
+            return "Yanlış parola";
+          case "auth/email-already-in-use":
+            return "Bu e-posta adresi zaten kullanımda";
+          case "auth/weak-password":
+            return "Parola çok zayıf, en az 6 karakter kullanın";
+          default:
+            return "Bir hata oluştu: " + errorCode;
+        }
+      }
+
+      // Makale yer işaretleme fonksiyonu - iyileştirilmiş
+      async function toggleBookmark(icon, articleId) {
+        const user = auth.currentUser;
+
+        if (!user) {
+          authModal.style.display = "flex";
+          alert("Makale kaydetmek için lütfen giriş yapın");
+          return;
+        }
+
+        // Eğer bu makale için zaten bir işlem beklemedeyse durdur
+        if (favoriteCache.isPending(articleId)) {
+          return;
+        }
+
+        // İşlem beklemede olarak işaretle
+        favoriteCache.addPending(articleId);
+
+        // Hemen UI güncellemesi yap
+        const resultItem = icon.closest(".result-item");
+        const isFavorite = icon.classList.contains("bookmarked");
+
+        if (isFavorite) {
+          icon.classList.remove("bookmarked");
+          resultItem.classList.remove("bookmarked");
+          favoriteCache.remove(articleId);
+        } else {
+          icon.classList.add("bookmarked");
+          resultItem.classList.add("bookmarked");
+          favoriteCache.add(articleId);
+        }
+
+        const userRef = db.collection("users").doc(user.uid);
+        const articleData = {
+          id: articleId,
+          title: icon.closest(".result-item").querySelector(".result-title")
+            .textContent,
+          author: icon
+            .closest(".result-item")
+            .querySelector(".result-author")
+            .textContent.replace("Yazar:", "")
+            .trim(),
+          savedAt: new Date().toISOString(),
+        };
+
+        try {
+          // Firestore'dan veriler 1 kez alınıyor
+          const userDoc = await userRef.get();
+          let savedArticles = userDoc.exists
+            ? userDoc.data().savedArticles || []
+            : [];
+
+          const existingArticleIndex = savedArticles.findIndex(
+            (article) => article.id === articleId
+          );
+
+          if (existingArticleIndex !== -1) {
+            // Makale zaten kaydedilmiş, kaldır
+            savedArticles.splice(existingArticleIndex, 1);
+            await userRef.update({
+              savedArticles: savedArticles,
+            });
+            showToast("Makale favorilerden kaldırıldı");
+          } else {
+            // Makale kaydedilmemiş, ekle
+            savedArticles.push(articleData);
+            await userRef.set(
+              {
+                savedArticles: savedArticles,
+              },
+              { merge: true }
+            );
+            showToast("Makale favorilere eklendi");
+          }
+        } catch (error) {
+          console.error("Yer işareti hatası:", error);
+          // Hata durumunda UI'ı eski haline getir
+          if (isFavorite) {
+            icon.classList.add("bookmarked");
+            resultItem.classList.add("bookmarked");
+            favoriteCache.add(articleId);
+          } else {
+            icon.classList.remove("bookmarked");
+            resultItem.classList.remove("bookmarked");
+            favoriteCache.remove(articleId);
+          }
+          showToast("Makale kaydedilirken bir hata oluştu", "error");
+        } finally {
+          // İşlem bekleme durumundan çıkar
+          favoriteCache.removePending(articleId);
+        }
+      }
+
+      // Sayfa yüklendiğinde yer işaretlerini kontrol et - iyileştirilmiş
+      document.addEventListener("DOMContentLoaded", async function () {
+        const user = auth.currentUser;
+        if (user) {
+          try {
+            // Firebase'den favori makaleleri al ve önbelleğe kaydet
+            const userDoc = await db.collection("users").doc(user.uid).get();
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              const savedArticles = userData.savedArticles || [];
+
+              // Favori ID'lerini önbelleğe ekle ve favoileri işaretle
+              savedArticles.forEach((article) => {
+                favoriteCache.add(article.id);
+                // Tüm makale kartlarında bu ID'yi ara
+                const resultItems = document.querySelectorAll(
+                  `.result-item[data-article-id="${article.id}"]`
+                );
+                resultItems.forEach((item) => {
+                  item.classList.add("bookmarked");
+                  const icon = item.querySelector(".bookmark-icon");
+                  if (icon) {
+                    icon.classList.add("bookmarked");
+                  }
+                });
+              });
+            }
+          } catch (error) {
+            console.error("Yer işareti yükleme hatası:", error);
+          }
+        }
+      });
+
+      // Modal işlemleri
+      const modal = document.getElementById("citationModal");
+      const span = document.getElementsByClassName("close")[0];
+      const citationContent = document.getElementById("citationContent");
+      const copyButton = document.getElementById("copyCitation");
+      const formatTabs = document.querySelectorAll(".format-tab");
+
+      // Format değişkenleri
+      let currentFormat = "apa";
+      let citationData = {};
+
+      function showCitation(
+        title,
+        authors,
+        journal,
+        volume,
+        issue,
+        pages,
+        doi,
+        button
+      ) {
+        // Reset citation modal
+        const modalContent = modal.querySelector(".modal-content");
+        modalContent.style.position = "relative";
+        modalContent.style.margin = "10% auto";
+        modalContent.style.top = "";
+        modalContent.style.left = "";
+        modalContent.style.transform = "";
+
+        // Alıntı verilerini kaydet
+        citationData = {
+          title: title,
+          authors: authors,
+          journal: journal,
+          volume: volume,
+          issue: issue,
+          pages: pages,
+          doi: doi,
+          year: new Date().getFullYear(),
+        };
+
+        // APA formatında alıntı oluştur
+        updateCitationText();
+
+        // Modalı göster
+        modal.style.display = "block";
+
+        // Tıklanan buton varsa, modalı makale kartına göre konumlandır
+        if (button) {
+          // Makale kartı elementini bul
+          const resultItem = button.closest(".result-item");
+          if (resultItem) {
+            // Makale kartının konumunu ve boyutunu al
+            const rect = resultItem.getBoundingClientRect();
+
+            // Modalın konumunu ve boyutunu al (setTimeout ile DOM güncellemesini bekle)
+            setTimeout(() => {
+              const modalRect = modalContent.getBoundingClientRect();
+
+              // Kartın merkezini bul
+              const cardCenterX = rect.left + rect.width / 2;
+              const cardCenterY = rect.top + rect.height / 2;
+
+              // Modalın merkezini kartın merkezine hizala
+              const windowScrollY = window.scrollY;
+              const windowHeight = window.innerHeight;
+              const windowWidth = window.innerWidth;
+
+              // Modalın üst pozisyonunu hesapla
+              let topPosition =
+                windowScrollY + cardCenterY - modalRect.height / 2;
+
+              // Ekranın üstünden taşmamasını sağla
+              if (topPosition < windowScrollY + 20) {
+                topPosition = windowScrollY + 20;
+              }
+
+              // Ekranın altından taşmamasını sağla
+              if (
+                topPosition + modalRect.height >
+                windowScrollY + windowHeight - 20
+              ) {
+                topPosition =
+                  windowScrollY + windowHeight - modalRect.height - 20;
+              }
+
+              // Yatay konumu hesapla - makale kartının ortasında
+              let leftPosition = cardCenterX - modalRect.width / 2;
+
+              // Ekranın solundan taşmamasını sağla
+              if (leftPosition < 20) {
+                leftPosition = 20;
+              }
+
+              // Ekranın sağından taşmamasını sağla
+              if (leftPosition + modalRect.width > windowWidth - 20) {
+                leftPosition = windowWidth - modalRect.width - 20;
+              }
+
+              // Modalın yeni konumunu ayarla
+              modalContent.style.margin = "0";
+              modalContent.style.position = "absolute";
+              modalContent.style.top = topPosition + "px";
+              modalContent.style.left = leftPosition + "px";
+              modalContent.style.transform = "none";
+            }, 10);
+          }
+        }
+      }
+
+      function updateCitationText() {
+        let citation = "";
+
+        if (currentFormat === "apa") {
+          citation = formatAPA();
+        } else if (currentFormat === "mla") {
+          citation = formatMLA();
+        } else if (currentFormat === "chicago") {
+          citation = formatChicago();
+        }
+
+        // İçeriği ayarla
+        citationContent.textContent = citation;
+      }
+
+      function formatAPA() {
+        // Yazarlar için formatlama yap
+        let formattedAuthors = citationData.authors;
+        if (citationData.authors.includes(",")) {
+          const authorList = citationData.authors
+            .split(",")
+            .map((author) => author.trim());
+
+          if (authorList.length > 1) {
+            const lastAuthor = authorList.pop();
+            formattedAuthors = authorList.join(", ") + " ve " + lastAuthor;
+          }
+        }
+
+        // APA formatı: Yazarlar. (Yıl). Başlık. Dergi, Cilt(Sayı), Sayfalar. DOI
+        let citation = `${formattedAuthors}. (${citationData.year}). ${citationData.title}.`;
+
+        // Dergi bilgisi varsa ekle
+        if (citationData.journal) {
+          citation += ` ${citationData.journal}`;
+
+          // Cilt bilgisi varsa ekle
+          if (citationData.volume) {
+            citation += `, ${citationData.volume}`;
+
+            // Sayı bilgisi varsa ekle
+            if (citationData.issue) {
+              citation += `(${citationData.issue})`;
+            }
+          }
+
+          // Sayfa bilgisi varsa ekle
+          if (citationData.pages) {
+            citation += `, ${citationData.pages}`;
+          }
+
+          citation += ".";
+        }
+
+        // DOI bilgisi varsa ekle
+        if (citationData.doi) {
+          citation += ` https://doi.org/${citationData.doi}`;
+        }
+
+        return citation;
+      }
+
+      function formatMLA() {
+        // MLA formatı: Yazarlar. "Başlık." Dergi, Cilt, Sayı, Yıl, Sayfalar.
+        let formattedAuthors = citationData.authors;
+        if (citationData.authors.includes(",")) {
+          const authorList = citationData.authors
+            .split(",")
+            .map((author) => author.trim());
+
+          if (authorList.length > 1) {
+            const lastAuthor = authorList.pop();
+            formattedAuthors = authorList.join(", ") + " ve " + lastAuthor;
+          }
+        }
+
+        let citation = `${formattedAuthors}. "${citationData.title}."`;
+
+        if (citationData.journal) {
+          citation += ` ${citationData.journal}`;
+
+          if (citationData.volume) {
+            citation += `, cilt ${citationData.volume}`;
+          }
+
+          if (citationData.issue) {
+            citation += `, sayı ${citationData.issue}`;
+          }
+
+          citation += `, ${citationData.year}`;
+
+          if (citationData.pages) {
+            citation += `, s. ${citationData.pages}`;
+          }
+
+          citation += ".";
+        }
+
+        return citation;
+      }
+
+      function formatChicago() {
+        // Chicago formatı: Yazarlar. "Başlık." Dergi Cilt, Sayı (Yıl): Sayfalar.
+        let formattedAuthors = citationData.authors;
+        if (citationData.authors.includes(",")) {
+          const authorList = citationData.authors
+            .split(",")
+            .map((author) => author.trim());
+
+          if (authorList.length > 1) {
+            const lastAuthor = authorList.pop();
+            formattedAuthors = authorList.join(", ") + " ve " + lastAuthor;
+          }
+        }
+
+        let citation = `${formattedAuthors}. "${citationData.title}."`;
+
+        if (citationData.journal) {
+          citation += ` ${citationData.journal}`;
+
+          if (citationData.volume) {
+            citation += ` ${citationData.volume}`;
+          }
+
+          if (citationData.issue) {
+            citation += `, no. ${citationData.issue}`;
+          }
+
+          citation += ` (${citationData.year})`;
+
+          if (citationData.pages) {
+            citation += `: ${citationData.pages}`;
+          }
+
+          citation += ".";
+        }
+
+        return citation;
+      }
+
+      // Format sekmeleri için olay dinleyicileri
+      formatTabs.forEach((tab) => {
+        tab.addEventListener("click", function () {
+          // Önceki aktif sekmeyi temizle
+          formatTabs.forEach((t) => t.classList.remove("active"));
+
+          // Seçili sekmeyi aktif yap
+          this.classList.add("active");
+
+          // Format bilgisini güncelle
+          currentFormat = this.dataset.format;
+
+          // Alıntıyı güncelle
+          updateCitationText();
+        });
+      });
+
+      // Kopyalama işlemi
+      copyButton.onclick = function () {
+        navigator.clipboard.writeText(citationContent.textContent).then(() => {
+          // Kopyalama başarılı olduğunda görsel geri bildirim
+          copyButton.innerHTML = '<i class="fas fa-check"></i> Kopyalandı!';
+          copyButton.classList.add("copied");
+
+          // 2 saniye sonra eski haline dön
+          setTimeout(() => {
+            copyButton.innerHTML = "Kopyala";
+            copyButton.classList.remove("copied");
+          }, 2000);
+        });
+      };
+
+      span.onclick = function () {
+        modal.style.display = "none";
+      };
+
+      window.onclick = function (event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+
+      function goToArticle(url) {
+        if (url && url !== "#") {
+          window.open(url, "_blank");
+        }
+      }
+
+      // PDF indirme işlemleri
+      const pdfModal = document.getElementById("pdfModal");
+      const pdfStatusText = document.getElementById("pdfStatusText");
+      const pdfModalClose = document.getElementById("pdfModalClose");
+      const loadingSpinner = document.querySelector(".loading-spinner");
+
+      async function downloadPDF(url, filename, button) {
+        // Reset PDF modal
+        const modalContent = pdfModal.querySelector(".pdf-modal-content");
+        modalContent.style.position = "relative";
+        modalContent.style.margin = "10% auto";
+        modalContent.style.top = "";
+        modalContent.style.left = "";
+        modalContent.style.transform = "";
+
+        // Show the modal
+        pdfModal.style.display = "block";
+        pdfStatusText.textContent = "PDF İndiriliyor...";
+        pdfStatusText.parentElement.className = "pdf-status";
+        pdfModalClose.style.display = "none";
+        loadingSpinner.style.display = "block";
+
+        // Tıklanan buton varsa, modalı makale kartına göre konumlandır
+        if (button) {
+          // Makale kartı elementini bul
+          const resultItem = button.closest(".result-item");
+          if (resultItem) {
+            // Makale kartının konumunu ve boyutunu al
+            const rect = resultItem.getBoundingClientRect();
+
+            // Modalın konumunu ve boyutunu al (setTimeout ile DOM güncellemesini bekle)
+            setTimeout(() => {
+              const modalRect = modalContent.getBoundingClientRect();
+
+              // Kartın merkezini bul
+              const cardCenterX = rect.left + rect.width / 2;
+              const cardCenterY = rect.top + rect.height / 2;
+
+              // Modalın merkezini kartın merkezine hizala
+              const windowScrollY = window.scrollY;
+              const windowHeight = window.innerHeight;
+              const windowWidth = window.innerWidth;
+
+              // Modalın üst pozisyonunu hesapla
+              let topPosition =
+                windowScrollY + cardCenterY - modalRect.height / 2;
+
+              // Ekranın üstünden taşmamasını sağla
+              if (topPosition < windowScrollY + 20) {
+                topPosition = windowScrollY + 20;
+              }
+
+              // Ekranın altından taşmamasını sağla
+              if (
+                topPosition + modalRect.height >
+                windowScrollY + windowHeight - 20
+              ) {
+                topPosition =
+                  windowScrollY + windowHeight - modalRect.height - 20;
+              }
+
+              // Yatay konumu hesapla - makale kartının ortasında
+              let leftPosition = cardCenterX - modalRect.width / 2;
+
+              // Ekranın solundan taşmamasını sağla
+              if (leftPosition < 20) {
+                leftPosition = 20;
+              }
+
+              // Ekranın sağından taşmamasını sağla
+              if (leftPosition + modalRect.width > windowWidth - 20) {
+                leftPosition = windowWidth - modalRect.width - 20;
+              }
+
+              // Modalın yeni konumunu ayarla
+              modalContent.style.margin = "0";
+              modalContent.style.position = "absolute";
+              modalContent.style.top = topPosition + "px";
+              modalContent.style.left = leftPosition + "px";
+              modalContent.style.transform = "none";
+            }, 10);
+          }
+        }
+
+        try {
+          const response = await fetch(url);
+          const contentType = response.headers.get("content-type");
+
+          if (contentType && contentType.includes("application/json")) {
+            // JSON yanıt geldi, hata veya yönlendirme var
+            const data = await response.json();
+
+            if (data.status === "redirect") {
+              window.open(data.url, "_blank");
+              pdfStatusText.textContent =
+                data.message || "Makale sayfası yeni sekmede açıldı";
+              pdfStatusText.parentElement.className = "pdf-status success";
+            } else {
+              throw new Error(data.message || "PDF indirilemedi");
+            }
+          } else {
+            // PDF içeriği geldi, indirmeyi başlat
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const downloadLink = document.createElement("a");
+            downloadLink.href = downloadUrl;
+            downloadLink.download = filename;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            window.URL.revokeObjectURL(downloadUrl);
+
+            pdfStatusText.textContent = "PDF Başarıyla İndirildi!";
+            pdfStatusText.parentElement.className = "pdf-status success";
+          }
+        } catch (error) {
+          console.error("PDF indirme hatası:", error);
+          pdfStatusText.textContent = "PDF İndirme Hatası: " + error.message;
+          pdfStatusText.parentElement.className = "pdf-status error";
+        } finally {
+          loadingSpinner.style.display = "none";
+          pdfModalClose.style.display = "block";
+        }
+      }
+
+      // Tamam butonuna tıklandığında modalı kapat
+      pdfModalClose.addEventListener("click", () => {
+        pdfModal.style.display = "none";
+      });
+
+      // PDF indirme butonlarına event listener ekle
+      document.querySelectorAll(".download-button").forEach((button) => {
+        button.addEventListener("click", async function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const url = this.href;
+          const filename = this.getAttribute("download") || "document.pdf";
+          await downloadPDF(url, filename, this);
+        });
+      });
+
+      // Modal dışına tıklandığında kapat (sadece Tamam butonu görünürse)
+      window.onclick = function (event) {
+        if (
+          event.target == pdfModal &&
+          pdfModalClose.style.display === "block"
+        ) {
+          pdfModal.style.display = "none";
+        }
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+
+      // Header scroll efekti
+      window.addEventListener("scroll", function () {
+        const header = document.querySelector(".header");
+        const scrollPosition = window.scrollY;
+        const navLinks = document.querySelectorAll(".nav-link");
+        const authButtons = document.querySelector(".auth-buttons");
+
+        if (scrollPosition > 50) {
+          header.classList.add("scrolled");
+          navLinks.forEach((link) => {
+            link.style.color = "#333";
+          });
+
+          // Eğer .auth-buttons gizlenmişse göster
+          if (window.innerWidth <= 768) {
+            authButtons.style.display = "flex";
+          }
+        } else {
+          header.classList.remove("scrolled");
+          navLinks.forEach((link) => {
+            link.style.color = "white";
+          });
+        }
+      });
+
+      // Sayfa yüklendiğinde de kontrol et
+      window.addEventListener("load", function () {
+        const scrollPosition = window.scrollY;
+        const header = document.querySelector(".header");
+        const navLinks = document.querySelectorAll(".nav-link");
+        const authButtons = document.querySelector(".auth-buttons");
+
+        if (scrollPosition > 50) {
+          header.classList.add("scrolled");
+          navLinks.forEach((link) => {
+            link.style.color = "#333";
+          });
+
+          // Eğer .auth-buttons gizlenmişse göster
+          if (window.innerWidth <= 768) {
+            authButtons.style.display = "flex";
+          }
+        }
+      });
+
+      // Mobil menü işlemleri
+      document.addEventListener("DOMContentLoaded", function () {
+        const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+        const navMenu = document.querySelector(".nav-menu");
+        const body = document.body;
+
+        const closeBtn = document.querySelector(".close-btn");
+
+        // Overlay oluştur
+        if (!document.querySelector(".menu-overlay")) {
+          const overlay = document.createElement("div");
+          overlay.className = "menu-overlay";
+          body.appendChild(overlay);
+        }
+
+        const overlay = document.querySelector(".menu-overlay");
+
+        function toggleMenu() {
+          navMenu.classList.toggle("active");
+          overlay.classList.toggle("active");
+          body.style.overflow = navMenu.classList.contains("active")
+            ? "hidden"
+            : "";
+        }
+
+        function closeMenu() {
+          navMenu.classList.remove("active");
+          overlay.classList.remove("active");
+          body.style.overflow = "";
+        }
+
+        mobileMenuBtn.addEventListener("click", toggleMenu);
+        closeBtn.addEventListener("click", closeMenu);
+        overlay.addEventListener("click", closeMenu);
+
+        // Menü linklerine tıklandığında menüyü kapat
+        document.querySelectorAll(".nav-link").forEach((link) => {
+          link.addEventListener("click", closeMenu);
+        });
+
+        // Auth butonlarına tıklandığında menüyü kapat
+        document.querySelectorAll(".auth-button").forEach((button) => {
+          button.addEventListener("click", closeMenu);
+        });
+
+        // Ekran boyutu değiştiğinde menüyü sıfırla
+        window.addEventListener("resize", () => {
+          if (window.innerWidth > 768) {
+            closeMenu();
+          }
+        });
+      });
+
+      // Bookmark işlemleri için event listener'ları ekle
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".bookmark-icon").forEach((icon) => {
+          icon.addEventListener("click", function (event) {
+            event.stopPropagation();
+            const articleId = this.getAttribute("data-article-id");
+            toggleBookmark(this, articleId);
+          });
+        });
+      });
+
+      // Performans İyileştirmeleri
+      document.addEventListener("DOMContentLoaded", function () {
+        // Animasyonlu arayüz elemanlarını işaretle
+        document
+          .querySelectorAll(".nav-link, .search-button, .action-button")
+          .forEach((el) => {
+            el.classList.add("interactive-element");
+          });
+
+        // Sonuç öğelerini animasyonlu yükle
+        document.querySelectorAll(".result-item").forEach((item, index) => {
+          item.style.animationDelay = `${index * 0.1}s`;
+          item.classList.add("animate-in");
+        });
+
+        // Sayfa yüklenirken smooth scroll
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // Mouse hareketine göre arka plan efektleri
+      document.addEventListener("mousemove", function (e) {
+        const mouseX = e.clientX / window.innerWidth;
+        const mouseY = e.clientY / window.innerHeight;
+
+        const orbs = document.querySelectorAll(".orb");
+        orbs.forEach((orb) => {
+          // Orblara hafif bir mouse takip efekti ekle
+          const moveX = (mouseX - 0.5) * 5;
+          const moveY = (mouseY - 0.5) * 5;
+          orb.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <title>Profilim - QuickLIT</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Firebase SDK'ları -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --secondary-color: #1d4ed8;
+        --background-color: #f8fafc;
+        --card-background: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --success-color: #22c55e;
+        --hover-color: #f1f5f9;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .profile-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8, #4338ca);
+        padding: 3.5rem 2rem 2.5rem;
+        border-radius: 1.5rem;
+        margin-bottom: 2.5rem;
+        color: white;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .profile-header:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            circle at 30% 50%,
+            rgba(59, 130, 246, 0.4) 0%,
+            transparent 35%
+          ),
+          radial-gradient(
+            circle at 70% 20%,
+            rgba(99, 102, 241, 0.4) 0%,
+            transparent 30%
+          );
+        z-index: 0;
+      }
+
+      .profile-header:after {
+        content: "";
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.05)
+        );
+        border-radius: 50%;
+        top: -100px;
+        right: -100px;
+        z-index: 0;
+      }
+
+      .logout-btn {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        padding: 0.75rem 1.25rem;
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 0.75rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(4px);
+        z-index: 2;
+      }
+
+      .logout-btn:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .logout-btn i {
+        font-size: 0.875rem;
+      }
+
+      .profile-avatar {
+        width: 130px;
+        height: 130px;
+        background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: white;
+        border: 6px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        margin-bottom: 0.5rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s ease;
+      }
+
+      .profile-avatar:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .profile-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+      }
+
+      .profile-name {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-top: -1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        background: linear-gradient(135deg, #ffffff, #e0f2fe);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        position: relative;
+        z-index: 2;
+      }
+
+      .profile-info p {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile-stats {
+        display: flex;
+        gap: 2.5rem;
+        margin-top: 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        backdrop-filter: blur(4px);
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.05rem;
+      }
+
+      .stat-item i {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .search-bar {
+        background: var(--card-background);
+        padding: 1.25rem;
+        border-radius: 1rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .search-input {
+        flex: 1;
+        border: none;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+        background: var(--hover-color);
+        border-radius: 0.75rem;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+      }
+
+      .search-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        background: white;
+      }
+
+      .articles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        position: relative;
+        min-height: 400px;
+      }
+
+      .article-card {
+        background: var(--card-background);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .article-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+
+      .article-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.5;
+      }
+
+      .article-author {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+        font-weight: 500;
+      }
+
+      .article-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .article-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: auto;
+      }
+
+      .notes-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal {
+        background-color: white;
+        width: 100%;
+        max-width: 600px;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .modal-overlay.active .modal {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: color 0.3s;
+      }
+
+      .modal-close:hover {
+        color: var(--primary-color);
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .modal-title {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        line-height: 1.4;
+      }
+
+      .notes-textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+        font-family: inherit;
+        font-size: 1rem;
+        color: var(--text-primary);
+        resize: vertical;
+        transition: all 0.3s;
+      }
+
+      .notes-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+
+      .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+
+      .btn-secondary {
+        background-color: #e5e7eb;
+        color: var(--text-primary);
+      }
+
+      .btn-secondary:hover {
+        background-color: #d1d5db;
+      }
+
+      .note-created {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+      }
+
+      .btn {
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        border: none;
+        flex: 1;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+      }
+
+      .btn-primary:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+      }
+
+      .btn-success {
+        background-color: var(--success-color);
+        color: white;
+        box-shadow: 0 4px 8px rgba(34, 197, 94, 0.2);
+      }
+
+      .btn-success:hover {
+        filter: brightness(1.05);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(34, 197, 94, 0.25);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--text-secondary);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+      }
+
+      .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+        opacity: 0.7;
+      }
+
+      .empty-state h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+      }
+
+      .empty-state p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+
+      .empty-state .back-to-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .empty-state .back-to-home:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-2px);
+      }
+
+      .back-btn {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background: white;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+        z-index: 1000;
+      }
+
+      .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        color: var(--secondary-color);
+      }
+
+      .back-btn i {
+        font-size: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .profile-header {
+          flex-direction: column;
+          text-align: center;
+          padding: 1.5rem;
+        }
+
+        .profile-stats {
+          justify-content: center;
+        }
+
+        .articles-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 2rem 0;
+      }
+
+      .loading-spinner .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(59, 130, 246, 0.1);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 2rem 0;
+        gap: 0.5rem;
+      }
+
+      .pagination-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: white;
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .pagination-btn:hover:not(
+          .pagination-btn-current,
+          .pagination-btn-disabled
+        ) {
+        background-color: var(--hover-color);
+        transform: translateY(-2px);
+      }
+
+      .pagination-btn-current {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
+      .pagination-btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .pagination-text {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin: 0 1rem;
+      }
+
+      /* Toast Bildirimleri */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background-color: white;
+        color: var(--text-primary);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 9999;
+      }
+
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .toast.success {
+        border-left: 4px solid var(--success-color);
+      }
+
+      .toast.success i {
+        color: var(--success-color);
+      }
+
+      .toast.error {
+        border-left: 4px solid #ef4444;
+      }
+
+      .toast.error i {
+        color: #ef4444;
+      }
+
+      .toast.info {
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .toast.info i {
+        color: var(--primary-color);
+      }
+
+      /* Yükleme göstergesi */
+      .loading-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        border-radius: inherit;
+      }
+
+      .loading-indicator .loading-spinner {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="back-btn" onclick="window.location.href='/'">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <main class="container">
+      <div class="profile-header">
+        <a href="/" class="back-button"
+          ><i class="fas fa-arrow-left"></i> Ana Sayfa</a
+        >
+        <button class="logout-btn" onclick="signOut()">
+          <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+        </button>
+        <div class="profile-avatar" id="userAvatar">
+          {{ display_name[0].upper() if display_name else "?" }}
+        </div>
+        <div class="profile-info">
+          <h1 class="profile-name" id="userName">{{ display_name }}</h1>
+          <p id="userEmail">{{ email }}</p>
+          <div class="profile-stats">
+            <div class="stat-item">
+              <i class="fas fa-book"></i>
+              <span id="articleCount">{{ saved_articles|length }} Makale</span>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-calendar-alt"></i>
+              <span id="registrationDate">{{ registration_date }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kullanıcı verileri için gizli eleman -->
+      <div
+        id="userData"
+        data-user-email="{{ email }}"
+        data-display-name="{{ display_name }}"
+        data-saved-articles="{{ saved_articles|tojson|safe }}"
+        style="display: none"
+      ></div>
+
+      <div class="search-bar">
+        <input
+          type="text"
+          id="articleSearch"
+          class="search-input"
+          placeholder="Kaydedilen makaleleri ara..."
+        />
+      </div>
+
+      <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+      </div>
+
+      <div id="articlesGrid" class="articles-grid" style="display: none">
+        <!-- Makaleler buraya dinamik olarak eklenecek -->
+      </div>
+
+      <div id="pagination" class="pagination" style="display: none">
+        <!-- Sayfalama butonları buraya eklenecek -->
+      </div>
+    </main>
+
+    <!-- Not ekleme modal -->
+    <div id="notesModal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Makale Notları</h3>
+          <button class="modal-close" onclick="closeNotesModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-title" id="notesModalTitle"></div>
+          <textarea
+            id="notesTextarea"
+            class="notes-textarea"
+            placeholder="Bu makale hakkında notlarınızı buraya ekleyin..."
+          ></textarea>
+          <div class="note-created" id="noteLastUpdated"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeNotesModal()">
+            İptal
+          </button>
+          <button class="btn btn-primary" onclick="saveNotes()">
+            <i class="fas fa-save"></i> Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Firebase yapılandırması
+      const firebaseConfig = {
+        apiKey: "AIzaSyBLZfR9qWZWYDCxXqaq6iioZtSDTPURYwY",
+        authDomain: "quicklit-96b6a.firebaseapp.com",
+        projectId: "quicklit-96b6a",
+        storageBucket: "quicklit-96b6a.firebasestorage.app",
+        messagingSenderId: "613186445176",
+        appId: "1:613186445176:web:bda221f909758c19d1728d",
+        measurementId: "G-TZRLG149TQ",
+      };
+
+      // Firebase'i başlat
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // Global değişkenler
+      let allArticles = [];
+      let filteredArticles = [];
+      let lastUpdatedAt = null;
+      const articleCache = new Map();
+
+      // Yükleme ekranını göster/gizle
+      let loadingIndicator = null;
+      function showLoading() {
+        if (!loadingIndicator) {
+          loadingIndicator = document.createElement("div");
+          loadingIndicator.className = "loading-overlay";
+          loadingIndicator.innerHTML = `
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+            <p>Veriler Yükleniyor...</p>
+          `;
+          document.body.appendChild(loadingIndicator);
+        }
+        loadingIndicator.style.display = "flex";
+      }
+
+      function hideLoading() {
+        if (loadingIndicator) {
+          loadingIndicator.style.display = "none";
+        }
+      }
+
+      // Toast bildirimi göster
+      function showToast(message, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+          <div class="toast-content">
+            <i class="fas ${
+              type === "success"
+                ? "fa-check-circle"
+                : type === "info"
+                ? "fa-info-circle"
+                : "fa-exclamation-circle"
+            }"></i>
+            <span>${message}</span>
+          </div>
+        `;
+        document.body.appendChild(toast);
+
+        // Animasyon ile göster
+        setTimeout(() => toast.classList.add("show"), 10);
+
+        // 3 saniye sonra kaldır
+        setTimeout(() => {
+          toast.classList.remove("show");
+          setTimeout(() => document.body.removeChild(toast), 3000);
+        }, 3000);
+      }
+
+      // Element yükleme durumunu göster
+      function showElementLoading(element) {
+        const loadingIndicator = document.createElement("div");
+        loadingIndicator.className = "loading-indicator";
+        loadingIndicator.innerHTML = `<div class="loading-spinner"><div class="spinner"></div></div>`;
+        element.style.position = "relative";
+        element.appendChild(loadingIndicator);
+        return loadingIndicator;
+      }
+
+      function hideElementLoading(element, indicator) {
+        if (indicator && element.contains(indicator)) {
+          element.removeChild(indicator);
+        }
+      }
+
+      // Debug bilgisi göster
+      function logDebugInfo(stage, data) {
+        if (data) {
+          console.group(`DEBUG - ${stage}`);
+          console.log("Veri türü:", typeof data);
+          console.log("Veri:", data);
+          if (Array.isArray(data)) {
+            console.log("Dizi uzunluğu:", data.length);
+            if (data.length > 0) {
+              console.log("İlk eleman:", data[0]);
+            }
+          }
+          console.groupEnd();
+        } else {
+          console.log(`DEBUG - ${stage}: Veri yok veya boş`);
+        }
+      }
+
+      // Kullanıcı verilerini yükle
+      function loadUserData() {
+        showLoading();
+        console.log("Kullanıcı verileri yükleniyor...");
+
+        const userData = document.getElementById("userData");
+        if (!userData) {
+          console.error("userData elementi bulunamadı");
+          return;
+        }
+
+        const userEmail = userData.dataset.userEmail;
+        let savedArticles = [];
+
+        try {
+          // Veri alanının içeriğini görüntüle
+          const rawData = userData.dataset.savedArticles;
+          console.log(
+            "Ham savedArticles verisi:",
+            rawData ? rawData.substring(0, 100) + "..." : "null/undefined"
+          );
+
+          // Veriyi ayrıştır
+          savedArticles = JSON.parse(userData.dataset.savedArticles || "[]");
+          logDebugInfo(
+            "HTML data attribute'dan alınan savedArticles",
+            savedArticles
+          );
+        } catch (error) {
+          console.error("Makale verilerini ayrıştırma hatası:", error);
+          console.log("Ham veri:", userData.dataset.savedArticles);
+          // Hata durumunda Firebase'den yüklemeyi dene
+          setTimeout(() => checkFirebaseUser(), 1000);
+          return;
+        }
+
+        const displayName = userData.dataset.displayName || "";
+
+        // Kullanıcı adını ve soyadını göster
+        const nameElement = document.getElementById("userName");
+        if (
+          displayName &&
+          displayName !== "undefined" &&
+          displayName !== "null"
+        ) {
+          nameElement.textContent = displayName;
+
+          // Avatar içindeki baş harfleri düzenle
+          const nameParts = displayName.split(" ");
+          if (nameParts.length >= 2) {
+            const initials = nameParts[0].charAt(0) + nameParts[1].charAt(0);
+            document.getElementById("userAvatar").textContent =
+              initials.toUpperCase();
+          } else if (nameParts.length === 1) {
+            document.getElementById("userAvatar").textContent = nameParts[0]
+              .charAt(0)
+              .toUpperCase();
+          }
+        }
+
+        // E-posta bilgisini göster
+        const emailElement = document.getElementById("userEmail");
+        if (userEmail && userEmail !== "undefined" && userEmail !== "null") {
+          emailElement.textContent = userEmail;
+        }
+
+        // Önbelleği doldur
+        if (Array.isArray(savedArticles)) {
+          savedArticles.forEach((article) => {
+            if (article && article.id) {
+              articleCache.set(article.id, article);
+            }
+          });
+        }
+
+        // Makaleleri göster
+        if (
+          savedArticles &&
+          Array.isArray(savedArticles) &&
+          savedArticles.length > 0
+        ) {
+          logDebugInfo("loadUserData - makaleleri gösterme", savedArticles);
+          displaySavedArticles(savedArticles);
+        } else {
+          logDebugInfo(
+            "savedArticles boş veya array değil, Firebase kullanıcısını kontrol et",
+            savedArticles
+          );
+          // Veri yoksa veya boşsa Firebase'den doğrudan yüklemeyi dene
+          checkFirebaseUser();
+        }
+      }
+
+      // Sayfa yüklendiğinde
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("Sayfa yüklendi, profil bilgileri yükleniyor...");
+        setupSearch();
+        loadUserData();
+      });
+
+      // Firebase kullanıcısını kontrol et
+      function checkFirebaseUser() {
+        console.log("Firebase kullanıcısı kontrol ediliyor...");
+        showLoading();
+
+        // Firebase oturumu kontrol et
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            console.log("Oturum açık kullanıcı:", user.email);
+            // Kullanıcı e-postasını göster
+            document.getElementById("userEmail").textContent = user.email;
+
+            // Kaydedilen makaleleri yükle
+            loadSavedArticles(user.uid);
+          } else {
+            console.warn("Firebase oturumu kapalı");
+            showToast(
+              "Oturum süresi dolmuş. Lütfen tekrar giriş yapın.",
+              "error"
+            );
+            // Kullanıcı giriş yapmamış, ana sayfaya yönlendir
+            setTimeout(() => (window.location.href = "/"), 2000);
+          }
+        });
+      }
+
+      // Arama işlevselliğini kur
+      function setupSearch() {
+        const searchInput = document.getElementById("articleSearch");
+        searchInput.addEventListener("input", (e) =>
+          searchArticles(e.target.value)
+        );
+        setTimeout(() => searchInput.focus(), 500);
+      }
+
+      // Arama yapma fonksiyonu
+      function searchArticles(searchTerm) {
+        searchTerm = searchTerm.toLowerCase().trim();
+
+        if (!allArticles.length) return;
+
+        const filteredArticles = searchTerm
+          ? allArticles.filter((article) => {
+              const title = (article.title || "").toLowerCase();
+              const author = (article.author || "").toLowerCase();
+              return title.includes(searchTerm) || author.includes(searchTerm);
+            })
+          : allArticles;
+
+        renderArticles(filteredArticles);
+      }
+
+      // Kaydedilen makaleleri göster
+      function displaySavedArticles(articles) {
+        hideLoading();
+        logDebugInfo("displaySavedArticles çağrıldı", articles);
+
+        if (!Array.isArray(articles)) {
+          console.error("Makale verisi dizi değil:", articles);
+          checkFirebaseUser();
+          return;
+        }
+
+        // Tüm makaleleri global değişkende sakla
+        allArticles = articles || [];
+        document.getElementById(
+          "articleCount"
+        ).textContent = `${allArticles.length} Makale`;
+
+        if (allArticles.length > 0) {
+          try {
+            const lastArticle = allArticles.sort(
+              (a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0)
+            )[0];
+
+            if (lastArticle && lastArticle.savedAt) {
+              const lastUpdateDate = new Date(
+                lastArticle.savedAt
+              ).toLocaleDateString("tr-TR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              });
+              document.getElementById("registrationDate").textContent =
+                lastUpdateDate;
+            }
+          } catch (error) {
+            console.error("Tarih işleme hatası:", error);
+          }
+        }
+
+        // Makaleleri render et - artikeller[] parametresi doğrudan gönder
+        renderArticles(allArticles);
+
+        // Sadece başarılı yükleme bildirimi göster
+        const count = allArticles.length;
+        if (count > 0) {
+          showToast(`${count} makale başarıyla yüklendi`, "success");
+        }
+      }
+
+      // Makaleleri ekrana render et
+      function renderArticles(articles) {
+        const articlesGrid = document.getElementById("articlesGrid");
+        const loadingSpinner = document.getElementById("loadingSpinner");
+
+        // Yükleme göstergesini gizle, makale gridini göster
+        loadingSpinner.style.display = "none";
+        articlesGrid.style.display = "grid";
+
+        logDebugInfo("renderArticles çağrıldı", articles);
+
+        if (!articles || !Array.isArray(articles) || !articles.length) {
+          articlesGrid.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-book-open"></i>
+              <h3>Henüz Makale Kaydedilmemiş</h3>
+              <p>Makaleler arayın ve kaydedin</p>
+              <a href="/" class="btn btn-primary">
+                <i class="fas fa-search"></i> Makale Ara
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        try {
+          // İçeriği temizle
+          articlesGrid.innerHTML = "";
+
+          // Makaleleri sırala ve her biri için bir kart oluştur
+          const sortedArticles = articles.sort(
+            (a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0)
+          );
+
+          // Her makale için DOM öğesi oluştur
+          sortedArticles.forEach((article) => {
+            if (!article || !article.id) {
+              console.warn("Geçersiz makale verisi:", article);
+              return;
+            }
+
+            let savedDate = "Belirtilmemiş";
+            try {
+              if (article.savedAt) {
+                savedDate = new Date(article.savedAt).toLocaleDateString(
+                  "tr-TR",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }
+                );
+              }
+            } catch (error) {
+              console.error(
+                "Tarih biçimlendirme hatası:",
+                error,
+                article.savedAt
+              );
+            }
+
+            const title = article.title || "Başlık yok";
+            const author = article.author || "Yazar belirtilmemiş";
+            const articleId = article.id;
+
+            // Yeni bir makale kartı oluştur
+            const cardElement = document.createElement("div");
+            cardElement.className = "article-card";
+            cardElement.dataset.articleId = articleId;
+
+            // Makale kartının içeriğini oluştur
+            cardElement.innerHTML = `
+              <h3 class="article-title">${title}</h3>
+              <p class="article-author">${author}</p>
+              ${
+                article.notes
+                  ? `<div class="notes-badge"><i class="fas fa-sticky-note"></i> Not</div>`
+                  : ""
+              }
+              <div class="article-meta">
+                <span><i class="far fa-calendar-alt"></i> ${savedDate}</span>
+            </div>
+            <div class="article-actions">
+                <a href="https://www.scopus.com/record/display.uri?eid=2-s2.0-${articleId}&origin=resultslist"
+                    class="btn btn-primary" target="_blank">
+                  <i class="fas fa-external-link-alt"></i> Scopus
+                </a>
+                <a href="/download_pdf/${articleId}"
+                    class="btn btn-success">
+                  <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <button 
+                  class="btn ${article.notes ? "btn-primary" : "btn-secondary"}"
+                  onclick="openNotesModal('${articleId}', '${title.replace(
+              /'/g,
+              "\\'"
+            )}')"
+                >
+                  <i class="fas fa-${
+                    article.notes ? "edit" : "sticky-note"
+                  }"></i> ${article.notes ? "Notu Düzenle" : "Not Ekle"}
+                </button>
+            </div>
+          `;
+
+            // DOM'a ekle
+            articlesGrid.appendChild(cardElement);
+          });
+
+          // Başarılı bir şekilde gösterildi
+          console.log(`${sortedArticles.length} makale başarıyla gösterildi`);
+        } catch (error) {
+          console.error("Makaleleri render ederken hata:", error);
+          articlesGrid.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle"></i>
+              <h3>Render Hatası</h3>
+              <p>Makaleler görüntülenirken bir sorun oluştu</p>
+              <button class="btn btn-primary" onclick="checkFirebaseUser()">
+                <i class="fas fa-sync"></i> Tekrar Dene
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      // Kaydedilen makaleleri Firestore'dan yükle
+      async function loadSavedArticles(userId) {
+        showLoading();
+        logDebugInfo("loadSavedArticles çağrıldı", userId);
+
+        // Yükleme göstergesini göster, makale gridini gizle
+        document.getElementById("loadingSpinner").style.display = "flex";
+        document.getElementById("articlesGrid").style.display = "none";
+
+        try {
+          // Önbelleğe alma stratejisiyle Firestore'dan verileri al
+          const userDocRef = db.collection("users").doc(userId);
+
+          // İlk yükleme sırasında oluşacak gecikmeden kaçınmak için önce yerelde saklanan verileri kontrol et
+          const cachedArticles = Array.from(articleCache.values());
+          if (cachedArticles.length > 0) {
+            displaySavedArticles(cachedArticles);
+          }
+
+          // Sunucudan verileri al
+          console.log("Firestore'dan veriler alınıyor: users/" + userId);
+          const userDoc = await userDocRef.get({ source: "server" });
+          logDebugInfo(
+            "Firebase'den gelen kullanıcı verisi",
+            userDoc.exists ? "Veri var" : "Veri yok"
+          );
+
+          if (!userDoc.exists) {
+            displaySavedArticles([]);
+            return;
+          }
+
+          const userData = userDoc.data();
+          logDebugInfo("Firebase'den gelen kullanıcı verisi içeriği", userData);
+
+          // Firestore veri yapısını kontrol et
+          let rawSavedArticles = userData.savedArticles;
+          if (!rawSavedArticles && userData.saved_articles) {
+            rawSavedArticles = userData.saved_articles;
+            console.warn("Eski veri yapısı (saved_articles) kullanıldı");
+          }
+
+          // Veri yoksa boş dizi kullan
+          if (!rawSavedArticles) {
+            rawSavedArticles = [];
+            console.warn("Hiç makale verisi bulunamadı");
+          }
+
+          // Dizi değilse dönüştür
+          const savedArticles = Array.isArray(rawSavedArticles)
+            ? rawSavedArticles
+            : [];
+
+          if (!Array.isArray(rawSavedArticles)) {
+            console.error(
+              "savedArticles bir dizi değil:",
+              typeof rawSavedArticles
+            );
+          }
+
+          logDebugInfo("Firebase'den alınan makaleler", savedArticles);
+
+          // Makaleleri göster
+          displaySavedArticles(savedArticles);
+
+          // Önbelleği güncelle
+          if (Array.isArray(savedArticles)) {
+            savedArticles.forEach((article) => {
+              if (article && article.id) {
+                articleCache.set(article.id, article);
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Makaleler yüklenirken hata:", error);
+          document.getElementById("articlesGrid").innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle"></i>
+              <h3>Hata Oluştu</h3>
+              <p>Makaleler yüklenirken bir sorun oluştu</p>
+              <button class="btn btn-primary" onclick="checkFirebaseUser()">
+                <i class="fas fa-sync"></i> Tekrar Dene
+              </button>
+            </div>
+          `;
+          document.getElementById("loadingSpinner").style.display = "none";
+          document.getElementById("articlesGrid").style.display = "grid";
+        } finally {
+          hideLoading();
+        }
+      }
+
+      // Çıkış yapma fonksiyonu
+      function signOut() {
+        auth
+          .signOut()
+          .then(() => {
+            // Çıkış başarılı, ana sayfaya yönlendir
+            window.location.href = "/";
+          })
+          .catch((error) => {
+            console.error("Çıkış yapılırken hata:", error);
+            alert("Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin.");
+          });
+      }
+
+      // Notları görüntüleme ve düzenleme için değişkenler
+      let currentArticleId = null;
+      let currentArticleTitle = null;
+
+      // Not ekleme modalını aç
+      function openNotesModal(articleId, articleTitle) {
+        currentArticleId = articleId;
+        currentArticleTitle = articleTitle;
+
+        // Modal başlığını ayarla
+        document.getElementById("notesModalTitle").textContent = articleTitle;
+
+        // Eğer daha önce not varsa göster
+        const article = allArticles.find((a) => a.id === articleId);
+        const textarea = document.getElementById("notesTextarea");
+
+        if (article && article.notes) {
+          textarea.value = article.notes.content;
+
+          if (article.notes.updatedAt) {
+            const lastUpdated = new Date(
+              article.notes.updatedAt
+            ).toLocaleString("tr-TR");
+            document.getElementById(
+              "noteLastUpdated"
+            ).textContent = `Son güncelleme: ${lastUpdated}`;
+          } else {
+            document.getElementById("noteLastUpdated").textContent = "";
+          }
+        } else {
+          textarea.value = "";
+          document.getElementById("noteLastUpdated").textContent = "";
+        }
+
+        // Modalı göster
+        document.getElementById("notesModal").classList.add("active");
+        setTimeout(() => textarea.focus(), 300);
+      }
+
+      // Not modalını kapat
+      function closeNotesModal() {
+        document.getElementById("notesModal").classList.remove("active");
+        currentArticleId = null;
+        currentArticleTitle = null;
+      }
+
+      // Notları kaydet
+      async function saveNotes() {
+        if (!currentArticleId) return;
+
+        const notesContent = document
+          .getElementById("notesTextarea")
+          .value.trim();
+        const userId = auth.currentUser?.uid;
+
+        if (!userId) {
+          showToast("Oturum açmanız gerekiyor", "error");
+          return;
+        }
+
+        // İşlem başladığını göstermek için modal üzerinde bir işaret koy
+        const saveButton = document.querySelector(".modal-footer .btn-primary");
+        const originalButtonText = saveButton.innerHTML;
+        saveButton.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
+        saveButton.disabled = true;
+
+        try {
+          const userDocRef = db.collection("users").doc(userId);
+
+          // Firestore veritabanındaki makaleleri al
+          const userDoc = await userDocRef.get();
+
+          if (!userDoc.exists) {
+            showToast("Kullanıcı bulunamadı", "error");
+            return;
+          }
+
+          const userData = userDoc.data();
+          const savedArticles = userData.savedArticles || [];
+
+          // Makaleyi bul
+          const articleIndex = savedArticles.findIndex(
+            (a) => a.id === currentArticleId
+          );
+
+          if (articleIndex === -1) {
+            showToast("Makale bulunamadı", "error");
+            return;
+          }
+
+          // Batch işlem başlat
+          const batch = db.batch();
+
+          // Makale notlarını güncelle
+          const noteUpdate = {
+            content: notesContent,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Batch update ile daha verimli güncelleme yap - sadece güncellenecek alan değişsin
+          batch.update(userDocRef, {
+            [`savedArticles.${articleIndex}.notes`]: noteUpdate,
+            lastUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Batch işlemini çalıştır
+          await batch.commit();
+
+          // Yerel verileri güncelle
+          const updatedArticle = {
+            ...savedArticles[articleIndex],
+            notes: noteUpdate,
+          };
+
+          // Önbelleği güncelle
+          articleCache.set(currentArticleId, updatedArticle);
+
+          // Listeyi güncelle
+          savedArticles[articleIndex] = updatedArticle;
+          allArticles = savedArticles;
+          filteredArticles = [...allArticles];
+
+          // Arama filtrelemesi yapılmışsa tekrar uygula
+          const searchTerm = document
+            .getElementById("articleSearch")
+            .value.trim();
+          if (searchTerm) {
+            searchArticles(searchTerm);
+          } else {
+            renderArticles();
+          }
+
+          // Modalı kapat
+          closeNotesModal();
+
+          // Başarı bildirimi göster
+          showToast("Notlar başarıyla kaydedildi", "success");
+        } catch (error) {
+          console.error("Notlar kaydedilirken hata:", error);
+          showToast("Notlar kaydedilirken bir hata oluştu", "error");
+        } finally {
+          // Düğmeyi eski haline getir
+          saveButton.innerHTML = originalButtonText;
+          saveButton.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>

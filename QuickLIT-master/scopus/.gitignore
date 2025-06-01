@@ -1,0 +1,25 @@
+# Çevre değişkenleri
+.env
+.env.local
+.env.development
+.env.production
+
+# Python cache dosyaları
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Makaleler klasörü
+makaleler/
+
+# Virtual environment
+venv/
+env/
+
+# IDE dosyaları
+.vscode/
+.idea/
+
+# Sistem dosyaları
+.DS_Store
+Thumbs.db
