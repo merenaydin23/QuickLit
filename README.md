@@ -1,4 +1,3 @@
-QuickLIT
 QuickLIT, akademik literatür araştırması ve PDF özetleme için geliştirilmiş bir projedir. İki ana bileşenden oluşur:
 
 Scopus - Akademik makale arama aracı
